@@ -34,6 +34,7 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "babel-plugin-styled-components": "^2.1.4",
     "eslint": "^8",
     "eslint-config-next": "14.0.4"
   }
