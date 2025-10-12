@@ -23,6 +23,9 @@ import {
   ThumbsDown
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import Image from 'next/image'
+import JSZip from 'jszip'
+import { saveAs } from 'file-saver'
 
 export function ClientShare() {
   const { currentAlbum } = useAlbumStore()
@@ -55,7 +58,7 @@ export function ClientShare() {
     setIsGeneratingLink(true)
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500))
-    const link = `https://viewfinder.app/album/${currentAlbum.id}?token=${Math.random().toString(36).substr(2, 9)}`
+    const link = `${window.location.origin}/share/${currentAlbum.id}?token=${Math.random().toString(36).substr(2, 9)}`
     setShareLink(link)
     setIsGeneratingLink(false)
     toast.success('Share link generated!')
@@ -69,6 +72,39 @@ export function ClientShare() {
       toast.error('Failed to copy to clipboard')
     }
   }
+
+  const handleExport = async (type: 'single' | 'carousel') => {
+    if (!currentAlbum || currentAlbum.photos.length === 0) {
+      toast.error("No photos to export.");
+      return;
+    }
+
+    toast.loading(`Preparing ${type} export...`);
+
+    const zip = new JSZip();
+    const folder = zip.folder(currentAlbum.name);
+
+    for (const photo of currentAlbum.photos) {
+      try {
+        const response = await fetch(photo.url);
+        const blob = await response.blob();
+        folder?.file(photo.name, blob);
+      } catch (error) {
+        console.error(`Failed to add photo ${photo.name} to zip:`, error);
+        toast.error(`Failed to include ${photo.name} in export.`);
+      }
+    }
+
+    zip.generateAsync({ type: "blob" }).then((content) => {
+      saveAs(content, `${currentAlbum.name}-${type}-export.zip`);
+      toast.dismiss();
+      toast.success(`${currentAlbum.photos.length} photos exported as ${type} successfully!`);
+    }).catch((error) => {
+      console.error("Error generating zip file:", error);
+      toast.dismiss();
+      toast.error("Failed to generate export file.");
+    });
+  };
 
   const sendEmail = async () => {
     if (!clientEmail) {
@@ -134,6 +170,24 @@ export function ClientShare() {
               <span>Active</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Album Photos Section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Photos in Album ({currentAlbum.photos.length})</h3>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+          {currentAlbum.photos.map(photo => (
+            <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden">
+              <Image
+                src={photo.thumbnailUrl || photo.url}
+                alt={photo.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 33vw, (max-width: 1200px) 25vw, 16vw"
+              />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -239,6 +293,25 @@ export function ClientShare() {
                   </div>
                 </div>
               )}
+
+              {/* Export Options */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Export Options</h3>
+                <div className="flex space-x-4">
+                  <button
+                    className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+                    onClick={() => handleExport('single')}
+                  >
+                    Export as Single Post
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-secondary-600 hover:bg-secondary-700 text-white rounded-lg font-medium transition-colors"
+                    onClick={() => handleExport('carousel')}
+                  >
+                    Export as Carousel
+                  </button>
+                </div>
+              </div>
 
               {/* Email Invite */}
               {shareMethod === 'email' && (

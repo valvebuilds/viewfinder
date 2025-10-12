@@ -20,6 +20,7 @@ import {
   Settings
 } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export function AlbumPreview() {
   const { currentAlbum } = useAlbumStore()
@@ -339,6 +340,13 @@ export function AlbumPreview() {
               <Download className="w-4 h-4" />
               <span>Download</span>
             </button>
+            <Link
+              href={`/share/${currentAlbum.id}`}
+              className="px-4 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+            >
+              <Eye className="w-4 h-4" />
+              <span>View Share Page</span>
+            </Link>
           </div>
         </div>
       </div>

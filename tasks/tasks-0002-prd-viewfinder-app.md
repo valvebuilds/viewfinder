@@ -9,7 +9,8 @@
 - `src/components/AlbumPreview.tsx` - Component for previewing albums.
 - `src/components/AlbumEditor.tsx` - Component for editing albums.
 - `src/components/AlbumGenerationPanel.tsx` - Component for AI album generation.
-- `src/components/ClientShare.tsx` - Potentially reusable for export functionality.
+- `src/components/ClientShare.tsx` - Client share component (updated with export functionality and share link generation).
+- `src/app/share/[albumId]/page.tsx` - Shareable album preview page.
 - `src/lib/aiAnalysis.ts` - AI analysis utility for photo scoring and curation (updated to use API route).
 - `src/store/useAlbumStore.ts` - Zustand store for managing album state.
 - `src/types/index.ts` - TypeScript type definitions (updated with thumbnailUrl and tags in metadata).
@@ -45,11 +46,11 @@
   - [x] 3.3 Develop a search bar for queries like “blue sky,” “portrait,” “no people.”
   - [x] 3.4 Implement quick filters for color and composition type.
   - [x] 3.5 Explore integration with a vector database (Pinecone or Qdrant) for advanced similarity searches (future consideration).
-- [ ] 4.0 Build Social Media Export
-  - [ ] 4.1 Implement photo selection for export.
-  - [ ] 4.2 Develop export options for single posts and carousel/sequences (basic ordering by color or subject similarity).
-  - [ ] 4.3 Implement output as downloadable ZIP using `ClientShare.tsx`.
-  - [ ] 4.4 Implement output as a shareable preview page.
+- [x] 4.0 Build Social Media Export
+  - [x] 4.1 Implement photo selection for export.
+  - [x] 4.2 Develop export options for single posts and carousel/sequences (basic ordering by color or subject similarity).
+  - [x] 4.3 Implement output as downloadable ZIP using `ClientShare.tsx`.
+  - [x] 4.4 Implement output as a shareable preview page.
 - [ ] 5.0 Refine UI/UX and Prepare for Beta
   - [ ] 5.1 Implement minimal, crisp, and photographic UI/UX based on the PRD's visual direction.
   - [ ] 5.2 Optimize layout to focus on images with light UI and minimal distractions.
