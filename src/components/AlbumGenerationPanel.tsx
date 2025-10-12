@@ -39,21 +39,21 @@ export function AlbumGenerationPanel() {
       name: 'Best Shots',
       description: 'AI selects the highest quality photos based on composition, lighting, and technical excellence',
       icon: Star,
-      color: 'text-yellow-500'
+      color: 'text-ochre'
     },
     {
       id: 'chronological' as CurationAlgorithm,
       name: 'Chronological',
       description: 'Organizes photos in the order they were taken, perfect for event coverage',
       icon: Clock,
-      color: 'text-blue-500'
+      color: 'text-skyBlue'
     },
     {
       id: 'color-story' as CurationAlgorithm,
       name: 'Color Story',
       description: 'Creates visual harmony by grouping photos with complementary colors and tones',
       icon: Palette,
-      color: 'text-purple-500'
+      color: 'text-indigoMuted'
     },
     {
       id: 'artistic-flow' as CurationAlgorithm,
@@ -80,17 +80,17 @@ export function AlbumGenerationPanel() {
     <div className="card overflow-hidden">
       {/* Header */}
       <div 
-        className="p-6 cursor-pointer"
+        className="p-6 cursor-pointer bg-secondary hover:bg-graphite"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-800 to-platinum-800 rounded-lg flex items-center justify-center shadow-sm">
-              <Sparkles className="w-5 h-5 text-primary-300" />
+            <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center shadow-sm">
+              <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-alabaster-300">AI Album Generation</h3>
-              <p className="text-sm text-secondary-400">
+              <h3 className="text-lg font-semibold text-primary">AI Album Generation</h3>
+              <p className="text-sm text-primary">
                 {selectedAlgorithm?.name} • {options.maxPhotos} photos
               </p>
             </div>
@@ -98,15 +98,15 @@ export function AlbumGenerationPanel() {
           
           <div className="flex items-center space-x-3">
             <div className="text-right">
-              <div className="text-sm font-medium text-alabaster-300">
+              <div className="text-sm font-medium text-primary">
                 {selectedPhotos.length > 0 ? selectedPhotos.length : photos.length} photos ready
               </div>
-              <div className="text-xs text-secondary-400">Click to configure</div>
+              <div className="text-xs text-clay">Click to configure</div>
             </div>
             {isExpanded ? (
-              <ChevronUp className="w-5 h-5 text-secondary-400" />
+              <ChevronUp className="w-5 h-5 text-secondary" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-secondary-400" />
+              <ChevronDown className="w-5 h-5 text-secondary" />
             )}
           </div>
         </div>
@@ -125,7 +125,7 @@ export function AlbumGenerationPanel() {
             <div className="p-6 space-y-6">
               {/* Algorithm Selection */}
               <div>
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Curation Algorithm</h4>
+                <h4 className="text-sm font-medium text-graphite mb-3">Curation Algorithm</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {algorithms.map((algorithm) => {
                     const Icon = algorithm.icon
@@ -138,8 +138,8 @@ export function AlbumGenerationPanel() {
                         className={`
                           p-4 rounded-lg border-2 text-left transition-all duration-200
                           ${isSelected 
-                            ? 'border-primary-500 bg-primary-50' 
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            ? 'border-accent bg-gray-50' 
+                            : 'border-gray-400 hover:border-graphite hover:bg-gray-50'
                           }
                         `}
                       >
@@ -233,27 +233,19 @@ export function AlbumGenerationPanel() {
                     }))}
                     className="rounded border-secondary-600 text-primary-500 focus:ring-primary-500 bg-surface"
                   />
-                  <span className="text-sm text-alabaster-300">Include EXIF metadata</span>
+                  <span className="text-sm text-graphite">Include EXIF metadata</span>
                 </label>
               </div>
 
               {/* Generate Button */}
-              <div className="flex items-center justify-between pt-4 border-t border-secondary-700">
-                <div className="flex items-center space-x-2 text-sm text-secondary-400">
-                  <Info className="w-4 h-4" />
-                  <span>
-                    Using {selectedPhotos.length > 0 ? selectedPhotos.length : photos.length} photos
-                    {selectedPhotos.length > 0 && ' (selected only)'}
-                  </span>
-                </div>
-                
+              <div className="flex items-center justify-center pt-4 border-t border-secondary text-primary">
                 <button
                   onClick={handleGenerate}
                   disabled={isGeneratingAlbum || photos.length === 0}
                   className={`
-                    px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2
+                    px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-primary
                     ${isGeneratingAlbum || photos.length === 0
-                      ? 'bg-secondary-100 text-secondary-400 cursor-not-allowed'
+                      ? 'bg-secondary cursor-not-allowed'
                       : 'btn-primary'
                     }
                   `}

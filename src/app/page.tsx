@@ -8,41 +8,13 @@ import { AlbumEditor } from '@/components/AlbumEditor'
 import { AlbumPreview } from '@/components/AlbumPreview'
 import { ClientShare } from '@/components/ClientShare'
 import { AlbumGenerationPanel } from '@/components/AlbumGenerationPanel'
+import { UserButton } from '@clerk/nextjs/server'
 
 export default function Home() {
-  const { activeView, photos, currentAlbum } = useAlbumStore()
-
-  const renderActiveView = () => {
-    switch (activeView) {
-      case 'upload':
-        return (
-          <div className="space-y-8">
-            <UploadZone />
-            {photos.length > 0 && (
-              <>
-                <PhotoGrid />
-                <AlbumGenerationPanel />
-              </>
-            )}
-          </div>
-        )
-      case 'editor':
-        return <AlbumEditor />
-      case 'preview':
-        return <AlbumPreview />
-      case 'share':
-        return <ClientShare />
-      default:
-        return <UploadZone />
-    }
-  }
-
   return (
-    <div className="min-h-screen gradient-bg">
-      <Header />
-      <main className="container mx-auto px-4 py-8">
-        {renderActiveView()}
-      </main>
-    </div>
-  )
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <UserButton afterSignOutUrl="/" />
+      <p>This is the main page</p>
+    </main>
+  );
 }

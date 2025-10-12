@@ -3,6 +3,7 @@
 import { useAlbumStore } from '@/store/useAlbumStore'
 import { Camera, Sparkles, Share2, Eye } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { SignInButton, SignedIn, SignedOut, UserButton, SignUpButton } from "@clerk/nextjs";
 
 export function Header() {
   const { activeView, setActiveView, currentAlbum, photos } = useAlbumStore()
@@ -15,17 +16,17 @@ export function Header() {
   ]
 
   return (
-    <header className="bg-surface/90 backdrop-blur-md border-b border-secondary-700 sticky top-0 z-50 shadow-sm">
+    <header className="bg-secondary backdrop-blur-md border-b border-secondary sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-platinum-500 rounded-lg flex items-center justify-center shadow-lg">
-              <Camera className="w-5 h-5 text-eerie-900" />
+            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center shadow-lg">
+              <Camera className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold gradient-text">ViewFinder</h1>
-              <p className="text-xs text-secondary-400">AI-Powered Photo Albums</p>
+              <h1 className="text-xl font-bold text-primary">ViewFinder</h1>
+              <p className="text-xs text-graphite">AI-Powered Photo Albums</p>
             </div>
           </div>
 
@@ -43,10 +44,10 @@ export function Header() {
                   className={`
                     relative flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                     ${isActive 
-                      ? 'bg-primary-900/30 text-primary-300 shadow-sm' 
+                      ? 'bg-primary text-secondary shadow-sm' 
                       : item.disabled 
-                        ? 'text-secondary-500 cursor-not-allowed' 
-                        : 'text-secondary-300 hover:text-alabaster-300 hover:bg-secondary-800 artsy-hover'
+                        ? 'text-secondary cursor-not-allowed' 
+                        : 'text-secondary hover:text-offWhite hover:bg-secondary artsy-hover'
                     }
                   `}
                 >
@@ -55,7 +56,7 @@ export function Header() {
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-primary-100 rounded-lg -z-10"
+                      className="absolute inset-0 bg-primary rounded-lg -z-10"
                       initial={false}
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     />
@@ -66,19 +67,26 @@ export function Header() {
           </nav>
 
           {/* Stats */}
-          <div className="flex items-center space-x-4 text-sm text-secondary-400">
+          <div className="flex items-center space-x-4 text-sm text-secondary">
             {photos.length > 0 && (
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-accent-saffron rounded-full shadow-sm"></div>
+                <div className="w-2 h-2 bg-accent rounded-full shadow-sm"></div>
                 <span>{photos.length} photos uploaded</span>
               </div>
             )}
             {currentAlbum && (
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-primary-500 rounded-full shadow-sm"></div>
+                <div className="w-2 h-2 bg-primary rounded-full shadow-sm"></div>
                 <span>Album ready</span>
               </div>
             )}
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+            <SignedOut>
+              <SignInButton />
+              <SignUpButton />
+            </SignedOut>
           </div>
         </div>
       </div>

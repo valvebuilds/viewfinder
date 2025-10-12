@@ -5,11 +5,19 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  purge: ['./src/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
   theme: {
     extend: {
       colors: {
+        charcoal: "#1A1A1A",       // Deep background base
+        ochre: "#C28C2F",          // Warm earthy highlight
+        forest: "#3F5B3A",         // Natural green
+        indigoMuted: "#2F3C56",    // Moody blue/indigo
+        clay: "#A86B52",           // Soft clay/brown tones
+        tangerine: "#E85C3C",      // Strong accent (CTA buttons)
+        skyBlue: "#7FA9D9",        // Gentle blue highlight
+        glassYellow: "#F3D65C",    // Stained-glass yellow
+        offWhite: "#F4F1EC",       // Soft neutral background
+        graphite: "#5C5C5C",
         // Viewfinder Dark Mode Palette
         platinum: {
           50: '#f8faf9',
@@ -71,41 +79,28 @@ module.exports = {
           800: '#464646',
           900: '#333533', // Main jet
         },
-        // Primary color system using platinum
-        primary: {
-          50: '#f8faf9',
-          100: '#f1f5f3',
-          200: '#e3ebe7',
-          300: '#cfdbd5',
-          400: '#b8c9c0',
-          500: '#a1b7ab',
-          600: '#8aa596',
-          700: '#739381',
-          800: '#5c816c',
-          900: '#456f57',
+       primary: {
+          DEFAULT: "#F4F1EC", // offwhite
+          foreground: "#1A1A1A", // charcoal
         },
-        // Secondary system using jet
         secondary: {
-          50: '#f5f5f5',
-          100: '#e8e8e8',
-          200: '#d1d1d1',
-          300: '#b9b9b9',
-          400: '#a2a2a2',
-          500: '#8b8b8b',
-          600: '#747474',
-          700: '#5d5d5d',
-          800: '#464646',
-          900: '#333533',
+          DEFAULT: "#1A1A1A", // charc
+          foreground: "#F4F1EC",
         },
-        // Accent colors
         accent: {
-          saffron: '#f5cb5c',
-          alabaster: '#e8eddf',
+          DEFAULT: "#E85C3C", // tangerine
+          hover: "#F2A18F", 
         },
-        // Dark mode background colors
-        background: '#242423', // Eerie black
-        surface: '#333533', // Jet
-        surfaceElevated: '#3a3b3a',
+        neutral: {
+          light: "#F4F1EC", // offWhite
+          dark: "#5C5C5C", // graphite
+        },
+        success: "#3F5B3A", // forest
+        warning: "#F3D65C", // glassYellow
+        info: "#7FA9D9", // skyBlue
+        highlight: "#A86B52", // clay
+        // background colors
+        background: '#F4F1EC', // charcoal
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

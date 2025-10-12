@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Liter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
+import { ClerkProvider } from '@clerk/nextjs'
 
 const inter = Inter({ subsets: ['latin'] })
+const liter = Liter({ weight: ['400'] , subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'ViewFinder - AI-Powered Photo Album Creation',
@@ -18,8 +20,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        {children}
+      <body className={liter.className}>
+        <ClerkProvider>
+          {children}
+        </ClerkProvider>
         <Toaster 
           position="top-right"
           toastOptions={{

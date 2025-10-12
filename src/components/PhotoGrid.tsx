@@ -97,10 +97,10 @@ function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoS
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.2, delay: index * 0.05 }}
       className={`
-        relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all duration-200
+        relative group cursor-pointer rounded-xl overflow-hidden border-4 transition-all duration-200
         ${isSelected 
-          ? 'border-primary-500 ring-2 ring-primary-200 shadow-lg' 
-          : 'border-secondary-200 hover:border-primary-300'
+          ? 'border-secondary ring-2 ring-primary shadow-lg' 
+          : 'border-primary hover:border-secondary'
         }
         ${isDragging ? 'z-50 shadow-2xl' : ''}
       `}
@@ -115,7 +115,7 @@ function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoS
         ${isHovered || isDragging ? 'opacity-100' : 'opacity-0'}
       `}>
         <div className="p-1.5 bg-white/90 rounded-lg shadow-sm cursor-move">
-          <GripVertical className="w-4 h-4 text-secondary-600" />
+          <GripVertical className="w-4 h-4 text-secondary" />
         </div>
       </div>
 
@@ -131,7 +131,7 @@ function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoS
           }}
           className="p-1.5 bg-white/90 hover:bg-amaranth-50 rounded-lg shadow-sm transition-colors"
         >
-          <Trash2 className="w-4 h-4 text-secondary-600 hover:text-amaranth-600" />
+          <Trash2 className="w-4 h-4 text-secondary hover:text-clay" />
         </button>
       </div>
 
@@ -144,62 +144,7 @@ function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoS
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        
-        {/* Selection Overlay */}
-        <AnimatePresence>
-          {isSelected && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-primary-500/20 flex items-center justify-center"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center shadow-lg"
-              >
-                <CheckCircle2 className="w-5 h-5 text-white" />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* AI Score Badge */}
-        {photo.metadata && (
-          <div className="absolute bottom-2 left-2">
-            <div className="flex items-center space-x-1 bg-black/70 text-white px-2 py-1 rounded-lg text-xs">
-              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-              <span>{Math.round(Math.random() * 40 + 60)}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Drag Indicator */}
-        {isDragging && (
-          <div className="absolute inset-0 bg-primary-500/10 border-2 border-dashed border-primary-500 flex items-center justify-center">
-            <div className="text-primary-600 font-medium">Moving...</div>
-          </div>
-        )}
-      </div>
-
-      {/* Photo Info */}
-      <div className="p-3 bg-surface">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-jet-900 truncate">
-              {photo.name}
-            </p>
-            <p className="text-xs text-secondary-500">
-              {Math.round(photo.size / 1024)} KB
-            </p>
-          </div>
-          <div className="flex items-center space-x-1 text-secondary-400">
-            <Eye className="w-4 h-4" />
-            <Download className="w-4 h-4" />
-          </div>
         </div>
-      </div>
     </motion.div>
   )
 }
@@ -324,59 +269,6 @@ export function PhotoGrid() {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="space-y-6">
-        {/* Controls */}
-        <div className="card p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Search className="w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search photos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="border-0 focus:ring-0 text-sm placeholder-gray-400"
-              />
-            </div>
-            
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
-            >
-              <Filter className="w-4 h-4" />
-              <span>Filters</span>
-            </button>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleSelectAll}
-              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
-            >
-              {selectedPhotos.length === photos.length ? 'Deselect All' : 'Select All'}
-            </button>
-            
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
-                }`}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Selection Summary */}
         {selectedPhotos.length > 0 && (
           <motion.div
@@ -426,21 +318,7 @@ export function PhotoGrid() {
             </AnimatePresence>
           </div>
         )}
-
-        {filteredPhotos.length === 0 && (
-          <div className="text-center py-12">
-            <Image
-              src="/placeholder-search.svg"
-              alt="No photos found"
-              width={200}
-              height={200}
-              className="mx-auto mb-4 opacity-50"
-            />
-            <p className="text-gray-500">No photos match your search</p>
-          </div>
-        )}
         </div>
-      </div>
     </DndProvider>
   )
 }
