@@ -17,11 +17,76 @@ import {
   Filter,
   Search,
   CheckCircle2,
-  GripVertical
+  GripVertical,
+  ChevronLeft,
+  ChevronRight,
+  Minimize2
 } from 'lucide-react'
 import Image from 'next/image'
 
 const ItemType = 'PHOTO'
+
+interface PhotoLightboxProps {
+  photos: any[];
+  currentIndex: number;
+  onClose: () => void;
+}
+
+const PhotoLightbox = ({ photos, currentIndex, onClose }: PhotoLightboxProps) => {
+  const [currentIdx, setCurrentIdx] = useState(currentIndex);
+  const currentPhoto = photos[currentIdx];
+
+  const nextPhoto = () => {
+    setCurrentIdx((prev) => (prev + 1) % photos.length);
+  };
+
+  const prevPhoto = () => {
+    setCurrentIdx((prev) => (prev - 1 + photos.length) % photos.length);
+  };
+
+  if (!currentPhoto) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="relative max-w-7xl max-h-full" onClick={(e) => e.stopPropagation()}>
+        <Image
+          src={currentPhoto.url}
+          alt={currentPhoto.name}
+          width={1600}
+          height={1000}
+          className="max-w-full max-h-[80vh] object-contain"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+        />
+
+        <button
+          onClick={prevPhoto}
+          className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <button
+          onClick={nextPhoto}
+          className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors"
+        >
+          <Minimize2 className="w-6 h-6" />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
 
 interface DraggablePhotoCardProps {
   photo: any
@@ -30,9 +95,10 @@ interface DraggablePhotoCardProps {
   removePhoto: (photoId: string) => void
   togglePhotoSelection: (photoId: string) => void
   isSelected: boolean
+  openLightbox: (index: number) => void
 }
 
-function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoSelection, isSelected }: DraggablePhotoCardProps) {
+function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoSelection, isSelected, openLightbox }: DraggablePhotoCardProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [isHovered, setIsHovered] = useState(false)
 
@@ -104,7 +170,7 @@ function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoS
         }
         ${isDragging ? 'z-50 shadow-2xl' : ''}
       `}
-      onClick={() => togglePhotoSelection(photo.id)}
+      onClick={() => openLightbox(index)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       data-handler-id={handlerId}
@@ -138,7 +204,7 @@ function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoS
       {/* Image */}
       <div className="aspect-square relative overflow-hidden">
         <Image
-          src={photo.url}
+          src={photo.thumbnailUrl || photo.url}
           alt={photo.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -157,7 +223,11 @@ export function PhotoGrid() {
     selectAllPhotos, 
     clearSelection,
     removePhoto,
-    reorderPhotos
+    reorderPhotos,
+    lightboxOpen,
+    currentLightboxPhotoIndex,
+    openLightbox,
+    closeLightbox
   } = useAlbumStore()
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -207,7 +277,7 @@ export function PhotoGrid() {
         {/* Thumbnail */}
         <div className="w-16 h-16 relative rounded-lg overflow-hidden flex-shrink-0">
           <Image
-            src={photo.url}
+            src={photo.thumbnailUrl || photo.url}
             alt={photo.name}
             fill
             className="object-cover"
@@ -269,6 +339,13 @@ export function PhotoGrid() {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="space-y-6">
+        {lightboxOpen && (
+          <PhotoLightbox
+            photos={photos}
+            currentIndex={currentLightboxPhotoIndex}
+            onClose={closeLightbox}
+          />
+        )}
         {/* Selection Summary */}
         {selectedPhotos.length > 0 && (
           <motion.div
@@ -305,6 +382,7 @@ export function PhotoGrid() {
                   removePhoto={removePhoto}
                   togglePhotoSelection={togglePhotoSelection}
                   isSelected={selectedPhotos.includes(photo.id)}
+                  openLightbox={openLightbox}
                 />
               ))}
             </AnimatePresence>

@@ -18,6 +18,8 @@ interface AlbumState {
   // UI State
   isGeneratingAlbum: boolean
   activeView: 'upload' | 'editor' | 'preview' | 'share'
+  lightboxOpen: boolean
+  currentLightboxPhotoIndex: number
   
   // Actions
   setCurrentAlbum: (album: Album | null) => void
@@ -42,6 +44,8 @@ interface AlbumState {
   // UI
   setIsGeneratingAlbum: (isGenerating: boolean) => void
   setActiveView: (view: 'upload' | 'editor' | 'preview' | 'share') => void
+  openLightbox: (photoIndex: number) => void
+  closeLightbox: () => void
   
   // Album generation
   generateAlbum: (options: AlbumGenerationOptions) => Promise<void>
@@ -59,6 +63,8 @@ const initialState = {
   isAnalyzing: false,
   isGeneratingAlbum: false,
   activeView: 'upload' as const,
+  lightboxOpen: false,
+  currentLightboxPhotoIndex: 0,
 }
 
 export const useAlbumStore = create<AlbumState>()(
@@ -118,6 +124,9 @@ export const useAlbumStore = create<AlbumState>()(
       
       setActiveView: (view) => set({ activeView: view }),
       
+      openLightbox: (photoIndex) => set({ lightboxOpen: true, currentLightboxPhotoIndex: photoIndex }),
+      closeLightbox: () => set({ lightboxOpen: false }),
+
       generateAlbum: async (options) => {
         set({ isGeneratingAlbum: true })
         

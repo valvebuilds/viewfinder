@@ -6,7 +6,8 @@ import { useAlbumStore } from '@/store/useAlbumStore'
 import { Cloud, Upload, Image, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
-import sharp from "sharp";
+import { supabase } from '@/lib/supabase';
+import sharp from 'sharp';
 
 export function UploadZone() {
   const { addPhotos, setUploadProgress, updateUploadProgress, photos } = useAlbumStore()
@@ -39,11 +40,42 @@ export function UploadZone() {
       try {
         // Update progress to processing
         updateUploadProgress(fileId, { status: 'processing', progress: 50 })
+
+        // Upload file to Supabase Storage
+        const { data, error } = await supabase.storage
+          .from('viewfinder-images') // Replace with your bucket name
+          .upload(`public/${file.name}`, file, { cacheControl: '3600', upsert: false });
+
+        if (error) {
+          throw error;
+        }
+
+        const { data: { publicUrl } } = supabase.storage.from('viewfinder-images').getPublicUrl(data.path);
+
+        // Create thumbnail
+        const arrayBuffer = await file.arrayBuffer();
+        const thumbnailBuffer = await sharp(Buffer.from(arrayBuffer))
+          .resize(200, 200, { fit: 'inside' })
+          .webp()
+          .toBuffer();
+        
+        const thumbnailFileName = `thumbnails/${file.name.split('.')[0]}.webp`;
+        const { data: thumbnailData, error: thumbnailError } = await supabase.storage
+          .from('viewfinder-images')
+          .upload(thumbnailFileName, thumbnailBuffer, { cacheControl: '3600', upsert: false, contentType: 'image/webp' });
+
+        if (thumbnailError) {
+          throw thumbnailError;
+        }
+
+        const { data: { publicUrl: thumbnailUrl } } = supabase.storage.from('viewfinder-images').getPublicUrl(thumbnailData.path);
+
         // Create photo object
         const photo = {
-          id: `photo-${Date.now()}-${i}`,
+          id: data.path,
           file,
-          url: URL.createObjectURL(file),
+          url: publicUrl,
+          thumbnailUrl,
           name: file.name,
           size: file.size,
           type: file.type,
@@ -53,13 +85,9 @@ export function UploadZone() {
             brightness: Math.random() * 100,
             contrast: Math.random() * 100
           }
-        }
-
-        newPhotos.push(photo)
-        updateUploadProgress(fileId, { status: 'completed', progress: 100 })
-
-        // Simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 500))
+        };
+        newPhotos.push(photo);
+        updateUploadProgress(fileId, { status: 'completed', progress: 100 });
 
       } catch (error) {
         console.error('Error processing file:', error)
