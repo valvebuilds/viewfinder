@@ -10,10 +10,11 @@
 - `src/components/AlbumEditor.tsx` - Component for editing albums.
 - `src/components/AlbumGenerationPanel.tsx` - Component for AI album generation.
 - `src/components/ClientShare.tsx` - Potentially reusable for export functionality.
-- `src/lib/aiAnalysis.ts` - Functions related to AI image analysis and tagging.
+- `src/lib/aiAnalysis.ts` - AI analysis utility for photo scoring and curation (updated to use API route).
 - `src/store/useAlbumStore.ts` - Zustand store for managing album state.
-- `src/types/index.ts` - TypeScript type definitions (updated with thumbnailUrl).
+- `src/types/index.ts` - TypeScript type definitions (updated with thumbnailUrl and tags in metadata).
 - `src/lib/supabase.ts` - Supabase client configuration.
+- `src/app/api/analyze-image/route.ts` - API route for AI image analysis.
 - `src/app/sign-in/[[...sign-in]]/page.tsx` - Clerk sign-in page.
 - `src/app/sign-up/[[...sign-up]]/page.tsx` - Clerk sign-up page.
 - `middleware.ts` - Clerk authentication middleware.
@@ -38,12 +39,12 @@
   - [x] 2.4 Ensure responsive layout for desktop and mobile.
   - [x] 2.5 Support JPG and PNG file formats for uploads.
   - [x] 2.6 Integrate image storage with Supabase Storage or AWS S3.
-- [ ] 3.0 Integrate AI Tagging and Smart Search
-  - [ ] 3.1 Implement AI auto-tagging upon image upload (color palette, objects, subjects, faces) using `src/lib/aiAnalysis.ts`.
-  - [ ] 3.2 Store tags and embeddings in the database (Supabase Postgres).
-  - [ ] 3.3 Develop a search bar for queries like “blue sky,” “portrait,” “no people.”
-  - [ ] 3.4 Implement quick filters for color and composition type.
-  - [ ] 3.5 Explore integration with a vector database (Pinecone or Qdrant) for advanced similarity searches (future consideration).
+- [x] 3.0 Integrate AI Tagging and Smart Search
+  - [x] 3.1 Implement AI auto-tagging upon image upload (color palette, objects, subjects, faces) using `src/lib/aiAnalysis.ts`.
+  - [x] 3.2 Store tags and embeddings in the database (Supabase Postgres).
+  - [x] 3.3 Develop a search bar for queries like “blue sky,” “portrait,” “no people.”
+  - [x] 3.4 Implement quick filters for color and composition type.
+  - [x] 3.5 Explore integration with a vector database (Pinecone or Qdrant) for advanced similarity searches (future consideration).
 - [ ] 4.0 Build Social Media Export
   - [ ] 4.1 Implement photo selection for export.
   - [ ] 4.2 Develop export options for single posts and carousel/sequences (basic ordering by color or subject similarity).

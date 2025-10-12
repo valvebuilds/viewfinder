@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { Photo, Album, UploadProgress, AIAnalysisResult, AlbumGenerationOptions } from '@/types'
+import { aiAnalyzer } from '@/lib/aiAnalysis'
 
 interface AlbumState {
   // Current album

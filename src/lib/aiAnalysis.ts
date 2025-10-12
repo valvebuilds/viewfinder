@@ -34,45 +34,23 @@ export class AIAnalyzer {
 
   // Mock AI analysis - in reality this would use computer vision APIs
   async analyzePhoto(photo: File): Promise<PhotoAnalysis> {
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000))
-
-    // Generate mock analysis data
-    const photoId = `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const formData = new FormData();
+    formData.append('image', photo);
     
-    // Mock scores (0-100)
-    const composition = Math.floor(Math.random() * 40 + 60) // 60-100
-    const lighting = Math.floor(Math.random() * 40 + 60)
-    const color = Math.floor(Math.random() * 40 + 60)
-    const sharpness = Math.floor(Math.random() * 40 + 60)
-    const overall = Math.floor((composition + lighting + color + sharpness) / 4)
-
-    // Mock tags based on scores
-    const tags = this.generateTags(composition, lighting, color, sharpness)
-    
-    // Mock color palette
-    const colorPalette = this.generateColorPalette()
-    const dominantColor = colorPalette[0]
-
-    return {
-      photoId,
-      scores: {
-        composition,
-        lighting,
-        color,
-        sharpness,
-        overall
+    const response = await fetch('/api/analyze-image', {
+      method: 'POST',
+      body: JSON.stringify({ imageUrl: URL.createObjectURL(photo) }), // Using a mock imageUrl for now
+      headers: {
+        'Content-Type': 'application/json',
       },
-      tags,
-      colorPalette,
-      dominantColor,
-      metadata: {
-        brightness: Math.floor(Math.random() * 100),
-        contrast: Math.floor(Math.random() * 100),
-        saturation: Math.floor(Math.random() * 100),
-        temperature: Math.floor(Math.random() * 100)
-      }
+    });
+
+    if (!response.ok) {
+      throw new Error('AI analysis failed');
     }
+
+    const analysis: PhotoAnalysis = await response.json();
+    return analysis;
   }
 
   // Analyze multiple photos for album curation

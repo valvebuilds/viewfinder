@@ -233,10 +233,29 @@ export function PhotoGrid() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchTerm, setSearchTerm] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
 
-  const filteredPhotos = photos.filter(photo =>
-    photo.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredPhotos = photos.filter(photo => {
+    const matchesSearchTerm = photo.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      photo.metadata?.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    if (!Object.keys(activeFilters).length) return matchesSearchTerm;
+
+    const matchesFilters = Object.entries(activeFilters).every(([filterType, selectedValues]) => {
+      if (selectedValues.length === 0) return true;
+
+      switch (filterType) {
+        case 'colorPalette':
+          return selectedValues.some(color => photo.metadata?.colorPalette?.includes(color));
+        case 'composition':
+          return selectedValues.some(comp => photo.metadata?.tags?.includes(comp));
+        default:
+          return true;
+      }
+    });
+
+    return matchesSearchTerm && matchesFilters;
+  });
 
   const handlePhotoClick = (photoId: string) => {
     togglePhotoSelection(photoId)
@@ -339,6 +358,90 @@ export function PhotoGrid() {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="space-y-6">
+        {/* Search and Filter */}
+        <div className="flex items-center space-x-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search photos by name or tag..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-medium transition-colors"
+          >
+            <Filter className="w-4 h-4" />
+            <span>Filters</span>
+          </button>
+        </div>
+
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-gray-50 p-4 rounded-lg mt-4"
+          >
+            <h4 className="text-lg font-semibold text-gray-800 mb-3">Filter Photos</h4>
+            <div className="space-y-4">
+              {/* Color Palette Filter */}
+              <div>
+                <h5 className="font-medium text-gray-700 mb-2">Color Palette</h5>
+                <div className="flex flex-wrap gap-2">
+                  {[ '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#6366f1', '#ec4899', '#f43f5e' ].map((color) => (
+                    <button
+                      key={color}
+                      className={`w-8 h-8 rounded-full border-2 ${activeFilters.colorPalette?.includes(color) ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200'}`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => {
+                        setActiveFilters((prev) => {
+                          const currentColors = prev.colorPalette || [];
+                          return {
+                            ...prev,
+                            colorPalette: currentColors.includes(color)
+                              ? currentColors.filter((c) => c !== color)
+                              : [...currentColors, color],
+                          };
+                        });
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Composition Filter */}
+              <div>
+                <h5 className="font-medium text-gray-700 mb-2">Composition Type</h5>
+                <div className="flex flex-wrap gap-2">
+                  {[ 'portrait', 'landscape', 'close-up', 'wide shot', 'golden hour', 'natural light' ].map((comp) => (
+                    <button
+                      key={comp}
+                      className={`px-3 py-1 rounded-full text-sm ${activeFilters.composition?.includes(comp) ? 'bg-primary-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+                      onClick={() => {
+                        setActiveFilters((prev) => {
+                          const currentComps = prev.composition || [];
+                          return {
+                            ...prev,
+                            composition: currentComps.includes(comp)
+                              ? currentComps.filter((c) => c !== comp)
+                              : [...currentComps, comp],
+                          };
+                        });
+                      }}
+                    >
+                      {comp}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {lightboxOpen && (
           <PhotoLightbox
             photos={photos}

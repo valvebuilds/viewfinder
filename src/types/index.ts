@@ -14,6 +14,7 @@ export interface Photo {
     dominantColor?: string
     brightness?: number
     contrast?: number
+    tags?: string[]
   }
   isSelected?: boolean
   order?: number

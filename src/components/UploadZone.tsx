@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase';
 import sharp from 'sharp';
+import { aiAnalyzer } from '@/lib/aiAnalysis';
+import { Photo, UploadProgress } from '@/types';
 
 export function UploadZone() {
   const { addPhotos, setUploadProgress, updateUploadProgress, photos } = useAlbumStore()
@@ -17,8 +19,8 @@ export function UploadZone() {
     if (acceptedFiles.length === 0) return
 
     setIsUploading(true)
-    const newPhotos: any[] = []
-    const progressItems: any[] = []
+    const newPhotos: Photo[] = []
+    const progressItems: UploadProgress[] = []
 
     // Initialize progress tracking
     acceptedFiles.forEach((file) => {
@@ -70,8 +72,11 @@ export function UploadZone() {
 
         const { data: { publicUrl: thumbnailUrl } } = supabase.storage.from('viewfinder-images').getPublicUrl(thumbnailData.path);
 
+        // Perform AI analysis
+        const analysis = await aiAnalyzer.analyzePhoto(file);
+
         // Create photo object
-        const photo = {
+        const photo: Photo = {
           id: data.path,
           file,
           url: publicUrl,
@@ -80,10 +85,11 @@ export function UploadZone() {
           size: file.size,
           type: file.type,
           metadata: {
-            colorPalette: ['#3b82f6', '#10b981', '#f59e0b'], // Mock data
-            dominantColor: '#3b82f6',
-            brightness: Math.random() * 100,
-            contrast: Math.random() * 100
+            colorPalette: analysis.colorPalette,
+            dominantColor: analysis.dominantColor,
+            brightness: analysis.metadata.brightness,
+            contrast: analysis.metadata.contrast,
+            tags: analysis.tags,
           }
         };
         newPhotos.push(photo);
