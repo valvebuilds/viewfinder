@@ -472,7 +472,7 @@ export function PhotoGrid() {
         </div>
 
         {/* Photo Grid/List */}
-        <div className="card p-6">
+        <div className="card p-6 bg-charcoal">
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             <AnimatePresence>

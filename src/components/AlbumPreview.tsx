@@ -166,7 +166,7 @@ export function AlbumPreview() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: index * 0.05 }}
-          className="relative group cursor-pointer rounded-lg overflow-hidden aspect-square"
+          className="relative group cursor-pointer rounded-lg overflow-hidden aspect-square bg-gray-800"
           onClick={() => {
             setCurrentPhotoIndex(index)
             setIsFullscreen(true)
@@ -206,7 +206,7 @@ export function AlbumPreview() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.05 }}
-          className="break-inside-avoid cursor-pointer rounded-lg overflow-hidden"
+          className="break-inside-avoid cursor-pointer rounded-lg overflow-hidden bg-gray-800"
           onClick={() => {
             setCurrentPhotoIndex(index)
             setIsFullscreen(true)
@@ -239,7 +239,7 @@ export function AlbumPreview() {
             setIsFullscreen(true)
           }}
         >
-          <div className="w-24 h-24 relative rounded-lg overflow-hidden flex-shrink-0">
+          <div className="w-24 h-24 relative rounded-lg overflow-hidden flex-shrink-0 bg-gray-800">
             <Image
               src={photo.url}
               alt={photo.name}
@@ -275,7 +275,7 @@ export function AlbumPreview() {
           className="relative"
         >
           <div 
-            className="relative h-96 rounded-xl overflow-hidden cursor-pointer"
+            className="relative h-96 rounded-xl overflow-hidden cursor-pointer bg-gray-800"
             onClick={() => {
               setCurrentPhotoIndex(index)
               setIsFullscreen(true)

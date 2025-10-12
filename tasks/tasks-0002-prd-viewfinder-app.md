@@ -51,11 +51,11 @@
   - [x] 4.2 Develop export options for single posts and carousel/sequences (basic ordering by color or subject similarity).
   - [x] 4.3 Implement output as downloadable ZIP using `ClientShare.tsx`.
   - [x] 4.4 Implement output as a shareable preview page.
-- [ ] 5.0 Refine UI/UX and Prepare for Beta
-  - [ ] 5.1 Implement minimal, crisp, and photographic UI/UX based on the PRD's visual direction.
-  - [ ] 5.2 Optimize layout to focus on images with light UI and minimal distractions.
-  - [ ] 5.3 Apply a dark gray/black background for gallery mode.
-  - [ ] 5.4 Implement soft fades and quick feedback transitions for uploads and searches.
-  - [ ] 5.5 Ensure all interactions feel instant.
-  - [ ] 5.6 Conduct thorough testing and bug fixing.
-  - [ ] 5.7 Prepare the application for private beta invitation to photographers.
+- [x] 5.0 Refine UI/UX and Prepare for Beta
+  - [x] 5.1 Implement minimal, crisp, and photographic UI/UX based on the PRD's visual direction.
+  - [x] 5.2 Optimize layout to focus on images with light UI and minimal distractions.
+  - [x] 5.3 Apply a dark gray/black background for gallery mode.
+  - [x] 5.4 Implement soft fades and quick feedback transitions for uploads and searches.
+  - [x] 5.5 Ensure all interactions feel instant.
+  - [x] 5.6 Conduct thorough testing and bug fixing.
+  - [x] 5.7 Prepare the application for private beta invitation to photographers.

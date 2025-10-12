@@ -3,6 +3,7 @@ import { Inter, Liter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import { ClerkProvider } from '@clerk/nextjs'
+import { Header } from '@/components/Header'
 
 const inter = Inter({ subsets: ['latin'] })
 const liter = Liter({ weight: ['400'] , subsets: ['latin'] })
@@ -20,8 +21,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={liter.className}>
+      <body className={`${liter.className} bg-charcoal`}>
         <ClerkProvider>
+          <Header />
           {children}
         </ClerkProvider>
         <Toaster 
