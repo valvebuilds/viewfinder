@@ -29,3 +29,6 @@ pnpm-debug.log*
 # Sistemas operativos
 .DS_Store
 Thumbs.db
+
+# clerk configuration (can include secrets)
+/.clerk/

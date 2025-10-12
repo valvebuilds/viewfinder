@@ -7,7 +7,6 @@ import { Cloud, Upload, Image, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase';
-import sharp from 'sharp';
 import { aiAnalyzer } from '@/lib/aiAnalysis';
 import { Photo, UploadProgress } from '@/types';
 
@@ -55,22 +54,19 @@ export function UploadZone() {
         const { data: { publicUrl } } = supabase.storage.from('viewfinder-images').getPublicUrl(data.path);
 
         // Create thumbnail
-        const arrayBuffer = await file.arrayBuffer();
-        const thumbnailBuffer = await sharp(Buffer.from(arrayBuffer))
-          .resize(200, 200, { fit: 'inside' })
-          .webp()
-          .toBuffer();
-        
-        const thumbnailFileName = `thumbnails/${file.name.split('.')[0]}.webp`;
-        const { data: thumbnailData, error: thumbnailError } = await supabase.storage
-          .from('viewfinder-images')
-          .upload(thumbnailFileName, thumbnailBuffer, { cacheControl: '3600', upsert: false, contentType: 'image/webp' });
 
-        if (thumbnailError) {
-          throw thumbnailError;
+        const thumbnailFormData = new FormData();
+        thumbnailFormData.append('image', file);
+        const thumbnailResponse = await fetch('/api/generate-thumbnail', {
+          method: 'POST',
+          body: thumbnailFormData,
+        });
+
+        if (!thumbnailResponse.ok) {
+          throw new Error('Failed to generate thumbnail');
         }
 
-        const { data: { publicUrl: thumbnailUrl } } = supabase.storage.from('viewfinder-images').getPublicUrl(thumbnailData.path);
+        const { thumbnailUrl } = await thumbnailResponse.json();
 
         // Perform AI analysis
         const analysis = await aiAnalyzer.analyzePhoto(file);
