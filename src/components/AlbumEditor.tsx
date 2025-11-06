@@ -1,14 +1,28 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useAlbumStore } from '@/store/useAlbumStore'
-import { DndProvider, useDrag, useDrop } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   GripVertical, 
   Trash2, 
-  RotateCcw, 
   Save, 
   Eye, 
   Settings,
@@ -18,7 +32,6 @@ import {
   ZoomOut,
   Grid3X3,
   List,
-  Filter,
   Plus,
   BookOpen,
   ChevronLeft,
@@ -26,147 +39,101 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 
-const ItemType = 'PHOTO'
-
-interface DraggablePhotoProps {
+interface SortablePhotoProps {
   photo: any
   index: number
-  movePhoto: (dragIndex: number, hoverIndex: number) => void
   removePhoto: (photoId: string) => void
 }
 
-function DraggablePhoto({ photo, index, movePhoto, removePhoto }: DraggablePhotoProps) {
-  const ref = useRef<HTMLDivElement>(null)
+function SortablePhoto({ photo, index, removePhoto }: SortablePhotoProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [isDragOver, setIsDragOver] = useState(false)
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: photo.id })
 
-  const [{ handlerId }, drop] = useDrop({
-    accept: ItemType,
-    collect(monitor) {
-      return {
-        handlerId: monitor.getHandlerId(),
-      }
-    },
-    hover(item: any, monitor) {
-      if (!ref.current) {
-        return
-      }
-      setIsDragOver(true)
-      const dragIndex = item.index
-      const hoverIndex = index
-
-      if (dragIndex === hoverIndex) {
-        return
-      }
-
-      const hoverBoundingRect = ref.current?.getBoundingClientRect()
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-      const clientOffset = monitor.getClientOffset()
-      const hoverClientY = clientOffset!.y - hoverBoundingRect.top
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return
-      }
-
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return
-      }
-
-      movePhoto(dragIndex, hoverIndex)
-      item.index = hoverIndex
-    },
-    drop() {
-      setIsDragOver(false)
-    },
-  })
-
-  const [{ isDragging }, drag] = useDrag<any, any, { isDragging: boolean }>({
-    type: ItemType,
-    item: () => {
-      return { id: photo.id, index }
-    },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  })
-
-  drag(drop(ref))
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
 
   return (
     <motion.div
-      ref={ref}
+      ref={setNodeRef}
+      style={style}
       layout
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ 
-        opacity: isDragging ? 0.3 : 1, 
-        scale: isDragging ? 1.1 : 1,
-        rotate: isDragging ? 5 : 0,
+        opacity: isDragging ? 0.5 : 1, 
+        scale: isDragging ? 1.05 : 1,
         zIndex: isDragging ? 1000 : 1
       }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ 
-        duration: 0.3,
-        type: "spring",
-        stiffness: 300,
-        damping: 30
+        layout: {
+          duration: 0.2,
+          type: "spring",
+          stiffness: 400,
+          damping: 25
+        },
+        opacity: { duration: 0.2 },
+        scale: { duration: 0.2 },
       }}
-      className={`
-        relative group cursor-move rounded-lg overflow-hidden border-2 transition-all duration-300
-        ${isDragging 
-          ? 'border-saffron-500 shadow-2xl' 
-          : isDragOver
-          ? 'border-primary-400 bg-primary-900/20'
-          : 'border-secondary-600 hover:border-primary-400 hover:shadow-lg'
-        }
-      `}
+      className="relative group cursor-move rounded-lg overflow-hidden border-2 border-secondary-600 hover:border-primary-400 hover:shadow-lg transition-all duration-200"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      data-handler-id={handlerId}
     >
-      {/* Drag Handle */}
-      <div className={`
-        absolute top-2 left-2 z-10 transition-opacity duration-200
-        ${isHovered || isDragging ? 'opacity-100' : 'opacity-0'}
-      `}>
-        <div className="p-1.5 bg-white/90 rounded-lg shadow-sm cursor-move">
-          <GripVertical className="w-4 h-4 text-secondary-600" />
+      {/* Overlay with Controls - Make entire photo draggable */}
+      <div 
+        {...attributes}
+        {...listeners}
+        className={`absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 ${isHovered || isDragging ? 'opacity-100' : 'opacity-0'} cursor-move`}
+        style={{ touchAction: 'none' }}
+      >
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity p-2 bg-white/90 rounded-lg pointer-events-none">
+          <GripVertical className="w-4 h-4 text-primary" />
         </div>
-      </div>
-
-      {/* Remove Button */}
-      <div className={`
-        absolute top-2 right-2 z-10 transition-opacity duration-200
-        ${isHovered || isDragging ? 'opacity-100' : 'opacity-0'}
-      `}>
         <button
-          onClick={() => removePhoto(photo.id)}
-          className="p-1.5 bg-white/90 hover:bg-amaranth-50 rounded-lg shadow-sm transition-colors"
+          onClick={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            removePhoto(photo.id)
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="opacity-0 group-hover:opacity-100 transition-opacity p-2 bg-white/90 hover:bg-amaranth-50 rounded-lg pointer-events-auto"
         >
-          <Trash2 className="w-4 h-4 text-secondary-600 hover:text-amaranth-600" />
+          <Trash2 className="w-4 h-4 text-primary hover:text-amaranth-600" />
         </button>
       </div>
 
       {/* Photo */}
-      <div className="aspect-square relative">
+      <div className="relative w-full pointer-events-none">
         <Image
-          src={photo.url}
+          src={photo.thumbnailUrl || photo.url}
           alt={photo.name}
-          fill
-          className="object-cover"
+          width={800}
+          height={600}
+          className="object-contain w-full h-auto rounded-lg pointer-events-none"
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+          unoptimized={(photo.thumbnailUrl || photo.url)?.includes('supabase.co') || (photo.thumbnailUrl || photo.url)?.includes('supabase.in')}
         />
         
         {/* Order Number */}
-        <div className="absolute bottom-2 left-2">
-          <div className="w-6 h-6 bg-primary-500 text-white rounded-full flex items-center justify-center text-xs font-medium shadow-lg">
+        <div className="absolute top-2 left-2">
+          <div className="w-6 h-6 bg-primary-500 text-black rounded-full flex items-center justify-center text-xs font-medium shadow-lg">
             {index + 1}
           </div>
         </div>
 
         {/* AI Score */}
         {photo.metadata && (
-          <div className="absolute bottom-2 right-2">
-            <div className="flex items-center space-x-1 bg-accent-orange text-white px-2 py-1 rounded-lg text-xs shadow-sm">
+          <div className="absolute top-2 right-2">
+            <div className="flex items-center space-x-1 bg-accent-orange text-black px-2 py-1 rounded-lg text-xs shadow-sm">
               <span>★</span>
               <span>{Math.round(Math.random() * 40 + 60)}</span>
             </div>
@@ -175,62 +142,60 @@ function DraggablePhoto({ photo, index, movePhoto, removePhoto }: DraggablePhoto
 
         {/* Drag Indicator */}
         {isDragging && (
-          <div className="absolute inset-0 bg-primary-500/10 border-2 border-dashed border-primary-500 flex items-center justify-center">
-            <div className="text-primary-600 font-medium">Moving...</div>
+          <div className="absolute inset-0 bg-primary-500/10 border-2 border-dashed border-primary-500 flex items-center justify-center rounded-lg pointer-events-none">
+            <div className="text-primary font-medium">Moving...</div>
           </div>
         )}
-      </div>
-
-      {/* Photo Info */}
-      <div className="p-2 bg-surface">
-        <p className="text-xs font-medium text-jet-900 truncate">
-          {photo.name}
-        </p>
       </div>
     </motion.div>
   )
 }
 
 // Photobook Page Component
-function PhotobookPage({ photos, pageNumber, movePhoto, removePhoto }: {
+function PhotobookPage({ photos, pageNumber, removePhoto, photoIds, onDragEnd, sensors }: {
   photos: any[]
   pageNumber: number
-  movePhoto: (dragIndex: number, hoverIndex: number) => void
   removePhoto: (photoId: string) => void
+  photoIds: string[]
+  onDragEnd: (event: DragEndEvent) => void
+  sensors: ReturnType<typeof useSensors>
 }) {
   const photosPerPage = 4 // 2x2 grid per page
   
   return (
     <div className="bg-surface rounded-xl border border-secondary-600 p-8 shadow-lg">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-alabaster-300">Page {pageNumber}</h3>
-        <div className="text-sm text-secondary-400">{photos.length} photos</div>
+        <h3 className="font-semibold text-primary-300">Page {pageNumber}</h3>
+        <div className="text-sm text-primary-400">{photos.length} photos</div>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 min-h-[400px]">
-        {photos.map((photo, index) => (
-          <DraggablePhoto
-            key={photo.id}
-            photo={photo}
-            index={index+(pageNumber*photosPerPage)}
-            movePhoto={movePhoto}
-            removePhoto={removePhoto}
-          />
-        ))}
-        
-        {/* Empty slots for new photos */}
-        {Array.from({ length: photosPerPage - photos.length }).map((_, index) => (
-          <div
-            key={`empty-${index}`}
-            className="border-2 border-dashed border-secondary-600 rounded-lg min-h-[180px] flex items-center justify-center hover:border-primary-400 transition-colors"
-          >
-            <div className="text-center text-secondary-500">
-              <Plus className="w-8 h-8 mx-auto mb-2" />
-              <span className="text-sm">Drop photo here</span>
-            </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={photoIds} strategy={rectSortingStrategy}>
+          <div className="flex flex-row flex-wrap gap-3 justify-center px-3 md:px-0">
+            {photos.map((photo, index) => (
+              <SortablePhoto
+                key={photo.id}
+                photo={photo}
+                index={index+(pageNumber*photosPerPage)}
+                removePhoto={removePhoto}
+              />
+            ))}
+            
+            {/* Empty slots for new photos */}
+            {Array.from({ length: photosPerPage - photos.length }).map((_, index) => (
+              <div
+                key={`empty-${index}`}
+                className="border-2 border-dashed border-secondary-600 rounded-lg min-h-[180px] flex items-center justify-center hover:border-primary-400 transition-colors"
+              >
+                <div className="text-center text-primary-500">
+                  <Plus className="w-8 h-8 mx-auto mb-2" />
+                  <span className="text-sm">Drop photo here</span>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+      </DndContext>
     </div>
   )
 }
@@ -240,7 +205,8 @@ export function AlbumEditor() {
     currentAlbum, 
     reorderPhotos, 
     removePhoto,
-    updatePhoto 
+    updatePhoto,
+    setCurrentAlbum
   } = useAlbumStore()
   
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'photobook'>('photobook')
@@ -249,27 +215,67 @@ export function AlbumEditor() {
   const [history, setHistory] = useState<any[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [currentPage, setCurrentPage] = useState(0)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [editedTitle, setEditedTitle] = useState(currentAlbum?.name || '')
+
+  // Sync editedTitle when currentAlbum changes
+  useEffect(() => {
+    if (currentAlbum) {
+      setEditedTitle(currentAlbum.name)
+    }
+  }, [currentAlbum?.name])
 
   if (!currentAlbum) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Settings className="w-8 h-8 text-gray-400" />
+          <Settings className="w-8 h-8 text-black-400" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Album Selected</h3>
-        <p className="text-gray-600">Generate an album first to start editing</p>
+        <h3 className="text-lg font-medium text-black-900 mb-2">No Album Selected</h3>
+        <p className="text-black-600">Generate an album first to start editing</p>
       </div>
     )
   }
 
-  const movePhoto = (dragIndex: number, hoverIndex: number) => {
-    // Save to history
-    const newHistory = history.slice(0, historyIndex + 1)
-    newHistory.push([...currentAlbum.photos])
-    setHistory(newHistory)
-    setHistoryIndex(newHistory.length - 1)
-    
-    reorderPhotos(dragIndex, hoverIndex)
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    console.log('Drag ended:', { active: active.id, over: over?.id })
+
+    if (over && active.id !== over.id) {
+      // Save to history before making changes
+      const newHistory = history.slice(0, historyIndex + 1)
+      newHistory.push([...currentAlbum.photos])
+      setHistory(newHistory)
+      setHistoryIndex(newHistory.length - 1)
+
+      // Find indices and reorder in currentAlbum
+      const oldIndex = currentAlbum.photos.findIndex((photo) => photo.id === active.id)
+      const newIndex = currentAlbum.photos.findIndex((photo) => photo.id === over.id)
+      
+      console.log('Reordering:', { oldIndex, newIndex, totalPhotos: currentAlbum.photos.length })
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        // Reorder photos array
+        const newPhotos = [...currentAlbum.photos]
+        const [movedPhoto] = newPhotos.splice(oldIndex, 1)
+        newPhotos.splice(newIndex, 0, movedPhoto)
+        
+        // Update current album with reordered photos
+        setCurrentAlbum({
+          ...currentAlbum,
+          photos: newPhotos,
+          updatedAt: new Date()
+        })
+      }
+    }
   }
 
   // Photobook pagination logic
@@ -300,14 +306,50 @@ export function AlbumEditor() {
   }
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">{currentAlbum.name}</h2>
-              <p className="text-sm text-gray-600">
+            <div className="flex-1">
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  onBlur={() => {
+                    if (editedTitle.trim() && editedTitle !== currentAlbum.name) {
+                      setCurrentAlbum({
+                        ...currentAlbum,
+                        name: editedTitle.trim(),
+                        updatedAt: new Date()
+                      })
+                    }
+                    setIsEditingTitle(false)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.currentTarget.blur()
+                    } else if (e.key === 'Escape') {
+                      setEditedTitle(currentAlbum.name)
+                      setIsEditingTitle(false)
+                    }
+                  }}
+                  className="text-xl font-semibold text-black-900 bg-transparent border-b-2 border-primary-500 focus:outline-none focus:border-primary-600 w-full"
+                  autoFocus
+                />
+              ) : (
+                <h2 
+                  className="text-xl font-semibold text-black-900 cursor-pointer hover:text-primary-600 transition-colors"
+                  onClick={() => {
+                    setEditedTitle(currentAlbum.name)
+                    setIsEditingTitle(true)
+                  }}
+                  title="Click to edit title"
+                >
+                  {currentAlbum.name}
+                </h2>
+              )}
+              <p className="text-sm text-black-600">
                 {currentAlbum.photos.length} photos • {currentAlbum.settings.curationAlgorithm}
               </p>
             </div>
@@ -329,7 +371,7 @@ export function AlbumEditor() {
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-black rounded-lg font-medium transition-colors flex items-center space-x-2"
               >
                 <Save className="w-4 h-4" />
                 <span>Save</span>
@@ -350,7 +392,7 @@ export function AlbumEditor() {
                 >
                   <ZoomOut className="w-4 h-4" />
                 </button>
-                <span className="text-sm font-medium text-gray-700 w-12 text-center">
+                <span className="text-sm font-medium text-black-700 w-12 text-center">
                   {Math.round(zoom * 100)}%
                 </span>
                 <button
@@ -412,8 +454,8 @@ export function AlbumEditor() {
           {viewMode === 'photobook' ? (
             <div className="space-y-6">
               {/* Photobook Navigation */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-between ">
+                <div className="flex items-center space-x-4 ">
                   <button
                     onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                     disabled={currentPage === 0}
@@ -422,7 +464,7 @@ export function AlbumEditor() {
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   
-                  <span className="text-alabaster-300 font-medium">
+                  <span className="text-black-300 font-medium">
                     Page {currentPage + 1} of {Math.max(1, totalPages)}
                   </span>
                   
@@ -435,7 +477,7 @@ export function AlbumEditor() {
                   </button>
                 </div>
                 
-                <div className="text-sm text-secondary-400">
+                <div className="text-sm text-primary-400">
                   {currentAlbum.photos.length} photos total
                 </div>
               </div>
@@ -444,77 +486,52 @@ export function AlbumEditor() {
               <PhotobookPage
                 photos={currentPagePhotos}
                 pageNumber={currentPage + 1}
-                movePhoto={movePhoto}
                 removePhoto={removePhoto}
+                photoIds={currentPagePhotos.map(p => p.id)}
+                onDragEnd={handleDragEnd}
+                sensors={sensors}
               />
             </div>
           ) : viewMode === 'grid' ? (
-            <div 
-              className="grid gap-4"
-              style={{
-                gridTemplateColumns: `repeat(auto-fill, minmax(${200 * zoom}px, 1fr))`,
-                gap: `${16 * zoom}px`
-              }}
-            >
-              <AnimatePresence>
-                {currentAlbum.photos.map((photo, index) => (
-                  <DraggablePhoto
-                    key={photo.id}
-                    photo={photo}
-                    index={index}
-                    movePhoto={movePhoto}
-                    removePhoto={removePhoto}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <AnimatePresence>
-                {currentAlbum.photos.map((photo, index) => (
-                  <motion.div
-                    key={photo.id}
-                    layout
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="flex items-center space-x-4 p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
-                  >
-                    <div className="flex items-center space-x-2 text-gray-400">
-                      <GripVertical className="w-4 h-4" />
-                      <span className="text-sm font-medium w-8">{index + 1}</span>
-                    </div>
-                    
-                    <div className="w-16 h-16 relative rounded-lg overflow-hidden flex-shrink-0">
-                      <Image
-                        src={photo.url}
-                        alt={photo.name}
-                        fill
-                        className="object-cover"
-                        sizes="64px"
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={currentAlbum.photos.map(p => p.id)} strategy={rectSortingStrategy}>
+                <div 
+                  className="grid gap-4"
+                  style={{
+                    gridTemplateColumns: `repeat(auto-fill, minmax(${200 * zoom}px, 1fr))`,
+                    gap: `${16 * zoom}px`
+                  }}
+                >
+                  <AnimatePresence mode="popLayout">
+                    {currentAlbum.photos.map((photo, index) => (
+                      <SortablePhoto
+                        key={photo.id}
+                        photo={photo}
+                        index={index}
+                        removePhoto={removePhoto}
                       />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {photo.name}
-                      </p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500 mt-1">
-                        <span>{Math.round(photo.size / 1024)} KB</span>
-                        <span>{photo.type}</span>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => removePhoto(photo.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4 text-gray-600 hover:text-red-600" />
-                    </button>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={currentAlbum.photos.map(p => p.id)} strategy={rectSortingStrategy}>
+                <div className="space-y-2">
+                  <AnimatePresence>
+                    {currentAlbum.photos.map((photo, index) => (
+                      <SortablePhoto
+                        key={photo.id}
+                        photo={photo}
+                        index={index}
+                        removePhoto={removePhoto}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
 
           {currentAlbum.photos.length === 0 && (
@@ -547,8 +564,11 @@ export function AlbumEditor() {
                     type="text"
                     value={currentAlbum.name}
                     onChange={(e) => {
-                      // Update album name - this would need to be implemented in the store
-                      console.log('Album name changed to:', e.target.value)
+                      setCurrentAlbum({
+                        ...currentAlbum,
+                        name: e.target.value,
+                        updatedAt: new Date()
+                      })
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   />
@@ -575,7 +595,6 @@ export function AlbumEditor() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-    </DndProvider>
+    </div>
   )
 }

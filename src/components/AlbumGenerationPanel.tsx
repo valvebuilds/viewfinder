@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAlbumStore } from '@/store/useAlbumStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -20,18 +20,43 @@ export function AlbumGenerationPanel() {
   const { 
     photos, 
     isGeneratingAlbum, 
-    generateAlbum,
-    selectedPhotos 
+    generateAlbum
   } = useAlbumStore()
   
   const [isExpanded, setIsExpanded] = useState(false)
+  
+  // Calculate valid min and max values
+  const minPhotos = photos.length > 0 ? Math.min(1, photos.length) : 1
+  const maxPhotosLimit = Math.max(1, photos.length)
+  
   const [options, setOptions] = useState<AlbumGenerationOptions>({
     algorithm: 'best-shots',
-    maxPhotos: Math.min(50, photos.length),
+    maxPhotos: photos.length > 0 ? Math.min(50, Math.max(5, maxPhotosLimit)) : 0,
     includeMetadata: true,
     customPrompt: '',
     targetAudience: 'client'
   })
+
+  // Update maxPhotos when photos.length changes
+  useEffect(() => {
+    if (photos.length > 0) {
+      const validMax = Math.min(50, maxPhotosLimit)
+      setOptions(prev => {
+        const currentValue = prev.maxPhotos
+        // Ensure value is within valid range
+        const clampedValue = Math.max(minPhotos, Math.min(currentValue, validMax))
+        return {
+          ...prev,
+          maxPhotos: clampedValue
+        }
+      })
+    } else {
+      setOptions(prev => ({
+        ...prev,
+        maxPhotos: 0
+      }))
+    }
+  }, [photos.length, maxPhotosLimit, minPhotos])
 
   const algorithms = [
     {
@@ -65,15 +90,15 @@ export function AlbumGenerationPanel() {
   ]
 
   const handleGenerate = async () => {
-    const photosToUse = selectedPhotos.length > 0 ? selectedPhotos.length : photos.length
     const finalOptions = {
       ...options,
-      maxPhotos: Math.min(options.maxPhotos, photosToUse)
+      maxPhotos: Math.min(options.maxPhotos, photos.length)
     }
     
     await generateAlbum(finalOptions)
   }
 
+  
   const selectedAlgorithm = algorithms.find(algo => algo.id === options.algorithm)
 
   return (
@@ -98,15 +123,12 @@ export function AlbumGenerationPanel() {
           
           <div className="flex items-center space-x-3">
             <div className="text-right">
-              <div className="text-sm font-medium text-primary">
-                {selectedPhotos.length > 0 ? selectedPhotos.length : photos.length} photos ready
-              </div>
-              <div className="text-xs text-clay">Click to configure</div>
+              <div className="font-weight-700 text-clay">Click to configure</div>
             </div>
             {isExpanded ? (
-              <ChevronUp className="w-5 h-5 text-secondary" />
+              <ChevronUp className="w-5 h-5 text-clay" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-secondary" />
+              <ChevronDown className="w-5 h-5 text-clay" />
             )}
           </div>
         </div>
@@ -166,21 +188,28 @@ export function AlbumGenerationPanel() {
                   <div className="flex items-center space-x-3">
                     <input
                       type="range"
-                      min="5"
-                      max={Math.min(100, photos.length)}
-                      value={options.maxPhotos}
-                      onChange={(e) => setOptions(prev => ({ 
-                        ...prev, 
-                        maxPhotos: parseInt(e.target.value) 
-                      }))}
-                      className="flex-1"
+                      min={minPhotos}
+                      max={maxPhotosLimit}
+                      value={Math.max(minPhotos, Math.min(options.maxPhotos, maxPhotosLimit))}
+                      onChange={(e) => {
+                        const newValue = parseInt(e.target.value, 10)
+                        setOptions(prev => ({ 
+                          ...prev, 
+                          maxPhotos: Math.max(minPhotos, Math.min(newValue, maxPhotosLimit))
+                        }))
+                      }}
+                      disabled={photos.length === 0}
+                      className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    <span className="text-sm font-medium text-gray-900 w-12">
-                      {options.maxPhotos}
+                    <span className="text-sm font-medium text-gray-900 w-12 text-right">
+                      {Math.max(minPhotos, Math.min(options.maxPhotos, maxPhotosLimit))}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Select how many photos to include in the album
+                    {photos.length > 0 
+                      ? `Select how many photos to include (${minPhotos}-${maxPhotosLimit} available)`
+                      : 'Upload photos to enable album generation'
+                    }
                   </p>
                 </div>
 
@@ -261,8 +290,8 @@ export function AlbumGenerationPanel() {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4" />
-                      <span>Generate Album</span>
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <span className="text-primary text-weight-900" >Generate Album</span>
                     </>
                   )}
                 </button>

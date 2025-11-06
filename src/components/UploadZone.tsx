@@ -3,15 +3,15 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { useAlbumStore } from '@/store/useAlbumStore'
-import { Cloud, Upload, Image, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Upload, Image } from 'lucide-react'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { supabase } from '@/lib/supabase';
+import { STORAGE_BUCKET } from '@/lib/constants'
 import { aiAnalyzer } from '@/lib/aiAnalysis';
 import { Photo, UploadProgress } from '@/types';
 
 export function UploadZone() {
-  const { addPhotos, setUploadProgress, updateUploadProgress, photos } = useAlbumStore()
+  const { addPhotos, setUploadProgress, updateUploadProgress } = useAlbumStore()
   const [isUploading, setIsUploading] = useState(false)
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -42,19 +42,25 @@ export function UploadZone() {
         // Update progress to processing
         updateUploadProgress(fileId, { status: 'processing', progress: 50 })
 
-        // Upload file to Supabase Storage
-        const { data, error } = await supabase.storage
-          .from('viewfinder-images') // Replace with your bucket name
-          .upload(`public/${file.name}`, file, { cacheControl: '3600', upsert: false });
+        // Upload file via API route (uses server client with proper permissions)
+        const uploadFormData = new FormData()
+        uploadFormData.append('file', file)
+        
+        const uploadResponse = await fetch('/api/photos/upload', {
+          method: 'POST',
+          body: uploadFormData,
+          credentials: 'include',
+        })
 
-        if (error) {
-          throw error;
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json()
+          throw new Error(errorData.error || 'Failed to upload file')
         }
 
-        const { data: { publicUrl } } = supabase.storage.from('viewfinder-images').getPublicUrl(data.path);
+        const { path, url: publicUrl } = await uploadResponse.json()
 
         // Create thumbnail
-
+        
         const thumbnailFormData = new FormData();
         thumbnailFormData.append('image', file);
         const thumbnailResponse = await fetch('/api/generate-thumbnail', {
@@ -66,14 +72,35 @@ export function UploadZone() {
           throw new Error('Failed to generate thumbnail');
         }
 
-        const { thumbnailUrl } = await thumbnailResponse.json();
+        const { thumbnailUrl, thumbnailPath } = await thumbnailResponse.json();
+
+        // Persist DB row for this photo (server inserts Supabase user)
+        const createResponse = await fetch('/api/photos/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            path: path,
+            thumbnailPath,
+            mime: file.type,
+          }),
+        });
+
+        const createResult = await createResponse.json()
+
+        if (!createResponse.ok) {
+          console.error('Failed to create photo record:', createResult)
+          throw new Error(createResult.error || 'Failed to create photo record in database')
+        }
+
+        console.log('Photo record created:', createResult)
 
         // Perform AI analysis
         const analysis = await aiAnalyzer.analyzePhoto(file);
 
         // Create photo object
         const photo: Photo = {
-          id: data.path,
+          id: path,
           file,
           url: publicUrl,
           thumbnailUrl,
@@ -176,7 +203,7 @@ export function UploadZone() {
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-3 h-3 border-2 border-white border-t-transparent rounded-full"
+                      className="w-4 h-4 border-2 border-black border-t-transparent rounded-full"
                     />
                   </motion.div>
                 )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAlbumStore } from '@/store/useAlbumStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -70,6 +70,35 @@ export function AlbumPreview() {
     if (!isFullscreen) return null
 
     const currentPhoto = currentAlbum.photos[currentPhotoIndex]
+    const [photoUrl, setPhotoUrl] = useState<string>(currentPhoto.url)
+    const [isLoadingUrl, setIsLoadingUrl] = useState(false)
+
+    useEffect(() => {
+      // Regenerate signed URL when opening fullscreen to ensure it's valid
+      const fetchFreshUrl = async () => {
+        setIsLoadingUrl(true)
+        try {
+          const response = await fetch(`/api/photos/${currentPhoto.id}`, {
+            credentials: 'include',
+          })
+          if (response.ok) {
+            const data = await response.json()
+            setPhotoUrl(data.url)
+          } else {
+            // If API fails, fall back to original URL
+            console.warn('Failed to fetch fresh URL, using original')
+            setPhotoUrl(currentPhoto.url)
+          }
+        } catch (error) {
+          console.error('Error fetching fresh URL:', error)
+          setPhotoUrl(currentPhoto.url)
+        } finally {
+          setIsLoadingUrl(false)
+        }
+      }
+
+      fetchFreshUrl()
+    }, [currentPhoto.id, currentPhotoIndex, currentPhoto.url])
 
     return (
       <motion.div
@@ -80,14 +109,25 @@ export function AlbumPreview() {
         onClick={() => setIsFullscreen(false)}
       >
         <div className="relative max-w-7xl max-h-full p-4">
-          <Image
-            src={currentPhoto.url}
-            alt={currentPhoto.name}
-            width={1200}
-            height={800}
-            className="max-w-full max-h-full object-contain"
-            sizes="100vw"
-          />
+          {isLoadingUrl ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <Image
+              src={photoUrl}
+              alt={currentPhoto.name}
+              width={1200}
+              height={800}
+              className="max-w-full max-h-full object-contain"
+              sizes="100vw"
+              unoptimized={photoUrl?.includes('supabase.co') || photoUrl?.includes('supabase.in')}
+              onError={() => {
+                // Fallback to original URL if image fails to load
+                setPhotoUrl(currentPhoto.url)
+              }}
+            />
+          )}
           
           {/* Navigation */}
           <button
@@ -166,22 +206,26 @@ export function AlbumPreview() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: index * 0.05 }}
-          className="relative group cursor-pointer rounded-lg overflow-hidden aspect-square bg-gray-800"
+          className="relative group cursor-pointer rounded-lg overflow-hidden bg-gray-800"
           onClick={() => {
             setCurrentPhotoIndex(index)
             setIsFullscreen(true)
           }}
         >
-          <Image
-            src={photo.url}
-            alt={photo.name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-          />
+          <div className="relative w-full">
+            <Image
+              src={photo.thumbnailUrl || photo.url}
+              alt={photo.name}
+              width={800}
+              height={600}
+              className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              unoptimized={photo.url?.includes('supabase.co') || photo.url?.includes('supabase.in')}
+            />
+          </div>
           
           {/* Hover Overlay */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center pointer-events-none">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
               <Maximize2 className="w-6 h-6 text-white" />
             </div>
@@ -206,19 +250,20 @@ export function AlbumPreview() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.05 }}
-          className="break-inside-avoid cursor-pointer rounded-lg overflow-hidden bg-gray-800"
+          className="break-inside-avoid cursor-pointer rounded-lg overflow-hidden bg-gray-800 mb-4"
           onClick={() => {
             setCurrentPhotoIndex(index)
             setIsFullscreen(true)
           }}
         >
           <Image
-            src={photo.url}
+            src={photo.thumbnailUrl || photo.url}
             alt={photo.name}
-            width={300}
-            height={Math.random() * 200 + 200}
-            className="w-full h-auto object-cover"
+            width={photo.width || 300}
+            height={photo.height || 300}
+            className="w-full h-auto object-contain"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            unoptimized={photo.url?.includes('supabase.co') || photo.url?.includes('supabase.in')}
           />
         </motion.div>
       ))}
@@ -241,11 +286,12 @@ export function AlbumPreview() {
         >
           <div className="w-24 h-24 relative rounded-lg overflow-hidden flex-shrink-0 bg-gray-800">
             <Image
-              src={photo.url}
+              src={photo.thumbnailUrl || photo.url}
               alt={photo.name}
               fill
               className="object-cover"
               sizes="96px"
+              unoptimized={photo.url?.includes('supabase.co') || photo.url?.includes('supabase.in')}
             />
           </div>
           
@@ -282,11 +328,12 @@ export function AlbumPreview() {
             }}
           >
             <Image
-              src={photo.url}
+              src={photo.thumbnailUrl || photo.url}
               alt={photo.name}
               fill
               className="object-cover"
               sizes="100vw"
+              unoptimized={photo.url?.includes('supabase.co') || photo.url?.includes('supabase.in')}
             />
             
             {/* Story Overlay */}
@@ -332,21 +379,17 @@ export function AlbumPreview() {
           </div>
           
           <div className="flex items-center space-x-2">
-            <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors flex items-center space-x-2">
+            <Link
+              href={`/share/${currentAlbum.id}`}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors flex items-center space-x-2"
+            >
               <Share2 className="w-4 h-4" />
               <span>Share</span>
-            </button>
+            </Link>
             <button className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
               <Download className="w-4 h-4" />
               <span>Download</span>
             </button>
-            <Link
-              href={`/share/${currentAlbum.id}`}
-              className="px-4 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
-            >
-              <Eye className="w-4 h-4" />
-              <span>View Share Page</span>
-            </Link>
           </div>
         </div>
       </div>

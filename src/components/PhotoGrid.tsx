@@ -9,14 +9,10 @@ import {
   Heart, 
   Star, 
   Trash2, 
-  Eye, 
-  Download, 
-  MoreVertical,
   Grid3X3,
   List,
   Filter,
   Search,
-  CheckCircle2,
   GripVertical,
   ChevronLeft,
   ChevronRight,
@@ -62,6 +58,7 @@ const PhotoLightbox = ({ photos, currentIndex, onClose }: PhotoLightboxProps) =>
           height={1000}
           className="max-w-full max-h-[80vh] object-contain"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+          unoptimized={currentPhoto.url.includes('supabase.co') || currentPhoto.url.includes('supabase.in')}
         />
 
         <button
@@ -93,12 +90,10 @@ interface DraggablePhotoCardProps {
   index: number
   movePhoto: (dragIndex: number, hoverIndex: number) => void
   removePhoto: (photoId: string) => void
-  togglePhotoSelection: (photoId: string) => void
-  isSelected: boolean
   openLightbox: (index: number) => void
 }
 
-function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoSelection, isSelected, openLightbox }: DraggablePhotoCardProps) {
+function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, openLightbox }: DraggablePhotoCardProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [isHovered, setIsHovered] = useState(false)
 
@@ -163,11 +158,7 @@ function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoS
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.2, delay: index * 0.05 }}
       className={`
-        relative group cursor-pointer rounded-xl overflow-hidden border-4 transition-all duration-200
-        ${isSelected 
-          ? 'border-secondary ring-2 ring-primary shadow-lg' 
-          : 'border-primary hover:border-secondary'
-        }
+        relative group cursor-pointer rounded-xl overflow-hidden border-4 border-primary hover:border-secondary transition-all duration-200
         ${isDragging ? 'z-50 shadow-2xl' : ''}
       `}
       onClick={() => openLightbox(index)}
@@ -204,11 +195,12 @@ function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoS
       {/* Image */}
       <div className="aspect-square relative overflow-hidden">
         <Image
-          src={photo.thumbnailUrl || photo.url}
+          src={photo.thumbnailUrl}
           alt={photo.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          unoptimized={photo.url.includes('supabase.co') || photo.url.includes('supabase.in')}
         />
         </div>
     </motion.div>
@@ -218,10 +210,6 @@ function DraggablePhotoCard({ photo, index, movePhoto, removePhoto, togglePhotoS
 export function PhotoGrid() {
   const { 
     photos, 
-    selectedPhotos, 
-    togglePhotoSelection, 
-    selectAllPhotos, 
-    clearSelection,
     removePhoto,
     reorderPhotos,
     lightboxOpen,
@@ -257,26 +245,11 @@ export function PhotoGrid() {
     return matchesSearchTerm && matchesFilters;
   });
 
-  const handlePhotoClick = (photoId: string) => {
-    togglePhotoSelection(photoId)
-  }
-
-  const handleSelectAll = () => {
-    if (selectedPhotos.length === photos.length) {
-      clearSelection()
-    } else {
-      selectAllPhotos()
-    }
-  }
-
   const movePhoto = (dragIndex: number, hoverIndex: number) => {
     reorderPhotos(dragIndex, hoverIndex)
   }
 
-
   const PhotoListItem = ({ photo, index }: { photo: any; index: number }) => {
-    const isSelected = selectedPhotos.includes(photo.id)
-    
     return (
       <motion.div
         layout
@@ -284,29 +257,19 @@ export function PhotoGrid() {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 20 }}
         transition={{ duration: 0.2, delay: index * 0.02 }}
-        className={`
-          flex items-center space-x-4 p-4 rounded-lg border transition-all duration-200 cursor-pointer
-          ${isSelected 
-            ? 'border-primary-500 bg-primary-50' 
-            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-          }
-        `}
-        onClick={() => handlePhotoClick(photo.id)}
+        className="flex items-center space-x-4 p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+        onClick={() => openLightbox(index)}
       >
         {/* Thumbnail */}
         <div className="w-16 h-16 relative rounded-lg overflow-hidden flex-shrink-0">
           <Image
-            src={photo.thumbnailUrl || photo.url}
+            src={photo.thumbnailUrl}
             alt={photo.name}
             fill
             className="object-cover"
             sizes="64px"
+            unoptimized={(photo.thumbnailUrl )?.includes('supabase.co') || (photo.thumbnailUrl )?.includes('supabase.in')}
           />
-          {isSelected && (
-            <div className="absolute inset-0 bg-primary-500/20 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-primary-600" />
-            </div>
-          )}
         </div>
 
         {/* Photo Details */}
@@ -351,6 +314,7 @@ export function PhotoGrid() {
     )
   }
 
+  // Early return: Don't render anything if there are no photos
   if (photos.length === 0) {
     return null
   }
@@ -449,26 +413,6 @@ export function PhotoGrid() {
             onClose={closeLightbox}
           />
         )}
-        {/* Selection Summary */}
-        {selectedPhotos.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="mt-4 p-3 bg-primary-50 border border-primary-200 rounded-lg"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-primary-700">
-                {selectedPhotos.length} photos selected
-              </span>
-              <button
-                onClick={clearSelection}
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-              >
-                Clear selection
-              </button>
-            </div>
-          </motion.div>
-        )}
         </div>
 
         {/* Photo Grid/List */}
@@ -483,8 +427,6 @@ export function PhotoGrid() {
                   index={index}
                   movePhoto={movePhoto}
                   removePhoto={removePhoto}
-                  togglePhotoSelection={togglePhotoSelection}
-                  isSelected={selectedPhotos.includes(photo.id)}
                   openLightbox={openLightbox}
                 />
               ))}

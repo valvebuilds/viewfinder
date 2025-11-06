@@ -185,6 +185,7 @@ export function ClientShare() {
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 33vw, (max-width: 1200px) 25vw, 16vw"
+                unoptimized={(photo.thumbnailUrl || photo.url)?.includes('supabase.co') || (photo.thumbnailUrl || photo.url)?.includes('supabase.in')}
               />
             </div>
           ))}

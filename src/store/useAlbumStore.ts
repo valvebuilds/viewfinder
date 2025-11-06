@@ -3,13 +3,13 @@ import { devtools } from 'zustand/middleware'
 import { Photo, Album, UploadProgress, AIAnalysisResult, AlbumGenerationOptions } from '@/types'
 import { aiAnalyzer } from '@/lib/aiAnalysis'
 
+
 interface AlbumState {
   // Current album
   currentAlbum: Album | null
   
   // Photos
   photos: Photo[]
-  selectedPhotos: string[]
   uploadProgress: UploadProgress[]
   
   // AI Analysis
@@ -29,11 +29,6 @@ interface AlbumState {
   updatePhoto: (photoId: string, updates: Partial<Photo>) => void
   reorderPhotos: (fromIndex: number, toIndex: number) => void
   
-  // Selection
-  togglePhotoSelection: (photoId: string) => void
-  selectAllPhotos: () => void
-  clearSelection: () => void
-  
   // Upload
   setUploadProgress: (progress: UploadProgress[]) => void
   updateUploadProgress: (fileId: string, updates: Partial<UploadProgress>) => void
@@ -48,6 +43,7 @@ interface AlbumState {
   openLightbox: (photoIndex: number) => void
   closeLightbox: () => void
   
+  fetchPhotos: () => Promise<void>
   // Album generation
   generateAlbum: (options: AlbumGenerationOptions) => Promise<void>
   
@@ -58,7 +54,6 @@ interface AlbumState {
 const initialState = {
   currentAlbum: null,
   photos: [],
-  selectedPhotos: [],
   uploadProgress: [],
   aiAnalysis: [],
   isAnalyzing: false,
@@ -73,7 +68,25 @@ export const useAlbumStore = create<AlbumState>()(
     (set, get) => ({
       ...initialState,
       
-      setCurrentAlbum: (album) => set({ currentAlbum: album }),
+      setCurrentAlbum: (album) => {
+        set({ currentAlbum: album })
+        // Save album to localStorage when set
+        if (album) {
+          try {
+            const storedAlbums = localStorage.getItem('viewfinder-albums')
+            const albums: Album[] = storedAlbums ? JSON.parse(storedAlbums) : []
+            const existingIndex = albums.findIndex(a => a.id === album.id)
+            if (existingIndex >= 0) {
+              albums[existingIndex] = album
+            } else {
+              albums.push(album)
+            }
+            localStorage.setItem('viewfinder-albums', JSON.stringify(albums))
+          } catch (error) {
+            console.error('Error saving album to localStorage:', error)
+          }
+        }
+      },
       
       addPhotos: (photos) => set((state) => ({
         photos: [...state.photos, ...photos],
@@ -81,7 +94,6 @@ export const useAlbumStore = create<AlbumState>()(
       
       removePhoto: (photoId) => set((state) => ({
         photos: state.photos.filter(photo => photo.id !== photoId),
-        selectedPhotos: state.selectedPhotos.filter(id => id !== photoId),
       })),
       
       updatePhoto: (photoId, updates) => set((state) => ({
@@ -96,18 +108,6 @@ export const useAlbumStore = create<AlbumState>()(
         photos.splice(toIndex, 0, movedPhoto)
         return { photos }
       }),
-      
-      togglePhotoSelection: (photoId) => set((state) => ({
-        selectedPhotos: state.selectedPhotos.includes(photoId)
-          ? state.selectedPhotos.filter(id => id !== photoId)
-          : [...state.selectedPhotos, photoId]
-      })),
-      
-      selectAllPhotos: () => set((state) => ({
-        selectedPhotos: state.photos.map(photo => photo.id)
-      })),
-      
-      clearSelection: () => set({ selectedPhotos: [] }),
       
       setUploadProgress: (progress) => set({ uploadProgress: progress }),
       
@@ -127,6 +127,40 @@ export const useAlbumStore = create<AlbumState>()(
       
       openLightbox: (photoIndex) => set({ lightboxOpen: true, currentLightboxPhotoIndex: photoIndex }),
       closeLightbox: () => set({ lightboxOpen: false }),
+
+      fetchPhotos: async () => {
+        try {
+          const res = await fetch('/api/photos', { method: 'GET' ,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          })
+          if (!res.ok) {
+            console.error('Failed to fetch photos:', await res.text())
+            return
+          }
+          const { items } = await res.json()
+          if (!items || items.length === 0) {
+            set({ photos: [] })
+            return
+          }
+          const fetchedPhotos: Photo[] = (items || []).map((p: any) => ({
+            id: p.id,
+            url: p.url,
+            thumbnailUrl: p.thumbnailUrl || undefined,
+            name: p.name,
+            size: p.size || 0,
+            type: p.type || 'application/octet-stream',
+            file: null as any,
+            metadata: {}
+          }))
+          set({ photos: fetchedPhotos })
+          console.log('Fetched photos:', fetchedPhotos)
+        } catch (error) {
+          console.error('Error in fetchPhotos:', error)
+        }
+      },
 
       generateAlbum: async (options) => {
         set({ isGeneratingAlbum: true })
@@ -178,6 +212,21 @@ export const useAlbumStore = create<AlbumState>()(
             activeView: 'editor',
             isGeneratingAlbum: false 
           })
+          
+          // Save album to localStorage
+          try {
+            const storedAlbums = localStorage.getItem('viewfinder-albums')
+            const albums: Album[] = storedAlbums ? JSON.parse(storedAlbums) : []
+            const existingIndex = albums.findIndex(a => a.id === newAlbum.id)
+            if (existingIndex >= 0) {
+              albums[existingIndex] = newAlbum
+            } else {
+              albums.push(newAlbum)
+            }
+            localStorage.setItem('viewfinder-albums', JSON.stringify(albums))
+          } catch (error) {
+            console.error('Error saving album to localStorage:', error)
+          }
         } catch (error) {
           console.error('Error generating album:', error)
           set({ isGeneratingAlbum: false })
@@ -190,4 +239,5 @@ export const useAlbumStore = create<AlbumState>()(
       name: 'album-store',
     }
   )
+  
 )
