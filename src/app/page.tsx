@@ -10,6 +10,7 @@ import { ClientShare } from '@/components/ClientShare'
 import { Header } from '@/components/Header'
 import { useEffect, useState, useRef } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
+import type { Session } from '@supabase/supabase-js'
 
 export default function Home() {
   const { activeView, photos, currentAlbum, fetchPhotos, reset } = useAlbumStore()
@@ -20,7 +21,7 @@ export default function Home() {
   useEffect(() => {
     let mounted = true
 
-    const handleAuthEvent = async (session: any | null) => {
+    const handleAuthEvent = async (session: Session | null) => {
       if (!mounted) return;
 
       if (session?.user) {
@@ -37,12 +38,12 @@ export default function Home() {
     };
 
     // Initial check
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       handleAuthEvent(session);
     });
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
         handleAuthEvent(session);
       }
