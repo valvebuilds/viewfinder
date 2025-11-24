@@ -36,23 +36,23 @@ export function Header() {
 
   const navigationItems = [
     { id: 'upload', label: 'Upload', icon: Camera, disabled: false },
-    { id: 'editor', label: 'Edit Album', icon: Sparkles, disabled: !currentAlbum },
+    { id: 'editor', label: 'Albums', icon: Sparkles, disabled: false},
     { id: 'preview', label: 'Preview', icon: Eye, disabled: !currentAlbum },
     { id: 'share', label: 'Share', icon: Share2, disabled: !currentAlbum },
   ]
 
   return (
-    <header className="bg-secondary backdrop-blur-md border-b border-secondary sticky top-0 z-50 shadow-sm">
+    <header className="bg-prussian-blue-700 backdrop-blur-md border-b border-prussian-blue-600 sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center shadow-lg">
-              <Camera className="w-5 h-5 text-primary" />
+            <div className="w-8 h-8 bg-prussian-blue-500 rounded-lg flex items-center justify-center shadow-lg">
+              <Camera className="w-5 h-5 text-baby-powder" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-primary">Viewfinder</h1>
-              <p className="text-xs text-graphite">AI-Powered Photo Albums</p>
+              <h1 className="text-xl font-bold text-baby-powder">Viewfinder</h1>
+              <p className="text-xs text-neutral-300">AI-Powered Photo Albums</p>
             </div>
           </div>
 
@@ -70,10 +70,10 @@ export function Header() {
                   className={`
                     relative flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
                     ${isActive 
-                      ? 'bg-primary text-secondary shadow-sm' 
+                      ? 'bg-prussian-blue-500 text-baby-powder shadow-sm' 
                       : item.disabled 
-                        ? 'text-secondary cursor-not-allowed' 
-                        : 'text-secondary hover:text-offWhite hover:bg-secondary artsy-hover'
+                        ? 'text-neutral-500 cursor-not-allowed' 
+                        : 'text-neutral-300 hover:text-baby-powder hover:bg-prussian-blue-600 artsy-hover'
                     }
                   `}
                 >
@@ -82,7 +82,7 @@ export function Header() {
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-primary rounded-lg -z-10"
+                      className="absolute inset-0 bg-prussian-blue-500 rounded-lg -z-10"
                       initial={false}
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     />
@@ -93,32 +93,21 @@ export function Header() {
           </nav>
 
           {/* Stats */}
-          <div className="flex items-center space-x-4 text-sm text-primary">
-            {photos.length > 0 && (
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-accent rounded-full shadow-sm"></div>
-                <span>{photos.length} photos uploaded</span>
-              </div>
-            )}
-            {currentAlbum && (
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-primary rounded-full shadow-sm"></div>
-                <span>Album ready</span>
-              </div>
-            )}
+          <div className="flex items-center space-x-4 text-sm text-baby-powder">
+            
             {loading ? (
               <div className="w-8 h-8 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
             ) : user ? (
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-primary" />
+                  <div className="w-8 h-8 bg-prussian-blue-500 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-baby-powder" />
                   </div>
-                  <span className="text-sm text-primary">{user.email?.split('@')[0]}</span>
+                  <span className="text-sm text-baby-powder">{user.email?.split('@')[0]}</span>
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm text-primary hover:bg-secondary-600 transition-colors"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm text-baby-powder hover:bg-prussian-blue-600 transition-colors"
                   title="Sign out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -128,13 +117,13 @@ export function Header() {
               <div className="flex items-center space-x-2">
                 <Link
                   href="/auth/sign-in"
-                  className="px-4 py-2 bg-primary text-secondary rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors"
+                  className="px-4 py-2 bg-prussian-blue-500 text-baby-powder rounded-lg text-sm font-medium hover:bg-prussian-blue-600 transition-colors"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/auth/sign-up"
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-primary hover:bg-secondary-600 transition-colors"
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-prussian-blue hover:bg-prussian-blue-600 hover:text-baby-powder transition-colors"
                 >
                   Sign Up
                 </Link>

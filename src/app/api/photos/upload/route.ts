@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClientForAPI } from '@/lib/supabaseServer'
 import { STORAGE_BUCKET } from '@/lib/constants'
 
+export const maxDuration = 300; // Set to 5 minutes (300 seconds) for large file uploads
+
 export async function POST(req: NextRequest) {
   try {
     // Create server client with request cookies
@@ -16,13 +18,15 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData()
     const file = formData.get('file') as File
+    const isThumbnail = formData.get('isThumbnail') === 'true'
     
     if (!file) {
       return NextResponse.json({ error: 'File is required' }, { status: 400 })
     }
 
     // Create user-specific path to organize files
-    const filePath = `${user.id}/${file.name}`
+    const folder = isThumbnail ? `thumbnails` : `full-res`;
+    const filePath = `${user.id}/${folder}/${file.name}`;
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)

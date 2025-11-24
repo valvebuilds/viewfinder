@@ -12,27 +12,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { path, thumbnailPath, mime } = await req.json()
-    if (!path || !mime) {
-      return NextResponse.json({ error: 'path and mime are required' }, { status: 400 })
+    const { id, path: fullSignedUrl, mime, thumbnailUrl: thumbnailSignedUrl } = await req.json()
+    if (!fullSignedUrl || !mime || !thumbnailSignedUrl) {
+      return NextResponse.json({ error: 'fullSignedUrl, mime, and thumbnailSignedUrl are required' }, { status: 400 })
     }
 
     // Note: user_id must be UUID type in the photos table, not bigint
-    console.log('Creating photo record:', { path, thumbnailPath, mime, userId: user.id })
+    console.log('Creating/Updating photo record:', { id, fullSignedUrl, mime, userId: user.id, thumbnailSignedUrl })
     
-    const { data, error } = await supabase
-      .from('photos')
-      .insert({
-        path,
-        thumbnail_path: thumbnailPath || null,
-        mime,
-        user_id: user.id,
-      })
-      .select('id')
-      .single()
+    let data, error;
+
+    if (id) {
+      // Update existing photo
+      ({ data, error } = await supabase
+        .from('photos')
+        .update({
+          path: fullSignedUrl,
+          mime,
+          thumbnail_path: thumbnailSignedUrl,
+          // user_id is not updated as it should be immutable
+        })
+        .eq('id', id)
+        .select('id')
+        .single());
+    } else {
+      // Insert new photo
+      ({ data, error } = await supabase
+        .from('photos')
+        .insert({
+          path: fullSignedUrl,
+          mime,
+          user_id: user.id,
+          thumbnail_path: thumbnailSignedUrl,
+        })
+        .select('id')
+        .single());
+    }
 
     if (error) {
-      console.error('Database insert error:', error)
+      console.error('Database operation error:', error)
       // Check if error is due to type mismatch
       if (error.code === '22P02' && error.message.includes('bigint')) {
         return NextResponse.json({ 
@@ -49,11 +67,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (!data) {
-      console.error('No data returned from insert')
-      return NextResponse.json({ error: 'Failed to create photo record - no data returned' }, { status: 500 })
+      console.error('No data returned from operation')
+      return NextResponse.json({ error: 'Failed to create/update photo record - no data returned' }, { status: 500 })
     }
 
-    console.log('Photo record created successfully:', data)
+    console.log('Photo record created/updated successfully:', data)
     const response = NextResponse.json({ id: data.id })
     return applyCookies(response)
   } catch (e: any) {

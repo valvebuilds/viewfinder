@@ -2,69 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   * {
-    @apply border-secondary;
+    @apply border-gray-200; /* Use neutral-200 for borders as per style guide */
   }
   
   body {
-    @apply bg-background text-charcoal font-sans;
+    @apply bg-baby-powder text-neutral-700 font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Responsive typography base sizes */
+    font-size: 14px; /* Mobile base */
+  }
+
+  @media (min-width: 641px) {
+    body {
+      font-size: 15px; /* Tablet base */
+    }
+  }
+
+  @media (min-width: 1025px) {
+    body {
+      font-size: 16px; /* Desktop base */
+    }
   }
   
   /* Ensure proper text contrast */
   h1, h2, h3, h4, h5, h6 {
-    @apply text-charcoal;
+    @apply text-prussian-blue;
   }
   
   p, span, div {
-    @apply text-neutral-dark;
+    @apply text-neutral-700;
   }
   
   .text-muted {
-    @apply text-offWhite;
+    @apply text-neutral-400; /* Muted/Placeholder text */
+  }
+
+  /* Global Focus Styles for Accessibility */
+  *:focus-visible {
+    outline: 2px solid theme('colors.prussian-blue.DEFAULT');
+    outline-offset: 2px;
+  }
+
+  /* Custom Text Selection */
+  ::selection {
+    background-color: theme('colors.prussian-blue.500');  /* prussian-blue-500 */
+    color: theme('colors.baby-powder.DEFAULT');             /* baby-powder */
   }
 }
 
 @layer components {
-  .btn {
-    @apply inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
-  }
-  
-  .btn-primary {
-    @apply bg-accent text-primary hover:bg-accent-hover shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
-  }
-  
-  .btn-secondary {
-    @apply bg-secondary text-neutral-light hover:bg-secondary border border-secondary;
-  }
-  
-  .btn-outline {
-    @apply border border-primary bg-transparent text-primary hover:bg-primary/20 hover:border-primary;
-  }
-  
-  .btn-accent {
-    @apply bg-accent text-offWhite hover:bg-accent-hover shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
-  }
-  
-  .btn-accent-alabaster {
-    @apply bg-accent-alabaster text-charcoal hover:bg-alabaster-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
-  }
-  
-  .card {
-    @apply rounded-xl border border-secondary shadow-sm hover:shadow-md transition-shadow duration-200;
-  }
-  
-  .card-elevated {
-    @apply rounded-xl border border-secondary shadow-lg hover:shadow-xl transition-all duration-200;
-  }
-  
-  .input {
-    @apply flex h-10 w-full rounded-lg border border-secondary px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors text-graphite;
-  }
-  
+  /* Removed custom button, card, and input component styles. 
+     Apply Tailwind classes directly in components as per STYLE_GUIDE.md. */
 }
 
 /* Custom scrollbar */
@@ -73,24 +65,24 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-secondary;
+  @apply bg-cream-100; /* Adjusted to new color system */
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary rounded-full;
+  @apply bg-prussian-blue rounded-full; /* Adjusted to new color system */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary;
+  @apply bg-prussian-blue-600; /* Adjusted to new color system */
 }
 
 /* Drag and drop styles */
 .drag-over {
-  @apply border-primary bg-primary/20 shadow-lg;
+  @apply border-prussian-blue bg-prussian-blue/20 shadow-lg; /* Adjusted to new color system */
 }
 
 .drag-active {
-  @apply scale-105 shadow-xl border-accent;
+  @apply scale-105 shadow-xl border-rose-ebony; /* Adjusted to new color system */
 }
 
 /* Artsy hover effects */
@@ -99,13 +91,12 @@
 }
 
 .artsy-glow {
-  @apply shadow-lg hover:shadow-primary/20 hover:shadow-2xl transition-shadow duration-300;
+  @apply shadow-lg hover:shadow-prussian-blue/20 hover:shadow-2xl transition-shadow duration-300; /* Adjusted to new color system */
 }
-
 
 /* Photo selection effects */
 .photo-selected {
-  @apply ring-2 ring-primary ring-offset-2 shadow-lg;
+  @apply ring-2 ring-prussian-blue ring-offset-2 shadow-lg; /* Adjusted to new color system */
 }
 
 .photo-hover {

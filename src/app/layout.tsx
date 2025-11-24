@@ -1,15 +1,14 @@
 import type { Metadata } from 'next'
-import { Inter, Liter } from 'next/font/google'
+import { Sora } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import { Header } from '@/components/Header'
 
-const inter = Inter({ subsets: ['latin'] })
-const liter = Liter({ weight: ['400'] , subsets: ['latin'] })
+const sora = Sora({ subsets: ['latin'], variable: '--font-sora' })
 
 export const metadata: Metadata = {
-  title: 'Viewfinder - AI-Powered Curation',
-  description: 'Transform your photography workflow with AI-powered album curation and client collaboration tools.',
+  title: 'ViewFinder',
+  description: 'AI-Powered Photo Albums',
   keywords: ['photography', 'photo album', 'AI', 'curation', 'client collaboration'],
 }
 
@@ -19,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={`${liter.className} bg-charcoal`}>
+    <html lang="en" className={`${sora.variable}`}>
+      <body className="font-sans">
         <Header />
         {children}
         <Toaster 

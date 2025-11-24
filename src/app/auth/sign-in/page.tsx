@@ -59,7 +59,7 @@ export default function SignInPage() {
             </div>
             <h1 className="text-2xl font-bold text-primary">ViewFinder</h1>
           </div>
-          <p className="text-secondary-400">Sign in to your account</p>
+          <p className="text-primary-400">Sign in to your account</p>
         </div>
 
         <div className="bg-secondary rounded-xl border border-secondary-600 p-8 shadow-lg">
@@ -71,7 +71,7 @@ export default function SignInPage() {
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-secondary mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">
                 Email
               </label>
               <input
@@ -86,7 +86,7 @@ export default function SignInPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-secondary mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-primary mb-2">
                 Password
               </label>
               <input
@@ -109,7 +109,7 @@ export default function SignInPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-secondary-400">
+          <div className="mt-6 text-center text-sm text-primary-400">
             Don't have an account?{' '}
             <Link href="/auth/sign-up" className="text-primary hover:text-primary-400 font-medium">
               Sign up

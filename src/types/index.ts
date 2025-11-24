@@ -82,11 +82,11 @@ export interface ClientFeedback {
 }
 
 export interface UploadProgress {
-  fileId: string
-  fileName: string
-  progress: number
-  status: 'uploading' | 'processing' | 'completed' | 'error'
-  error?: string
+  fileId: string;
+  fileName: string;
+  progress: number; // 0-100
+  status: 'uploading' | 'processing' | 'completed' | 'error' | 'compressing full-res' | 'uploading full-res' | 'uploading thumbnail' | 'thumbnail uploaded' | 'queued for full-res';
+  error?: string;
 }
 
 export interface AIAnalysisResult {

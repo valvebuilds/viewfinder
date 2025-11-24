@@ -12,8 +12,7 @@ import { useEffect, useState, useRef } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 
 export default function Home() {
-  const { activeView, photos, currentAlbum } = useAlbumStore()
-  const { fetchPhotos } = useAlbumStore()
+  const { activeView, photos, currentAlbum, fetchPhotos, reset } = useAlbumStore()
   const [userLoaded, setUserLoaded] = useState(false)
   const supabase = getSupabaseBrowserClient()
   const hasFetchedRef = useRef(false)
@@ -21,75 +20,39 @@ export default function Home() {
   useEffect(() => {
     let mounted = true
 
-    // Check if user is authenticated before fetching photos
-    const checkUserAndFetch = async () => {
-      try {
-        // Try getSession first (this checks cookies/localStorage)
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        
-        if (!mounted) return
+    const handleAuthEvent = async (session: any | null) => {
+      if (!mounted) return;
 
-        if (sessionError) {
-          console.error('Error getting session:', sessionError)
-          // If session error, try getUser as fallback
-          const { data: { user }, error: userError } = await supabase.auth.getUser()
-          if (userError || !user) {
-            setUserLoaded(true)
-            return
-          }
-          if (user && !hasFetchedRef.current) {
-            hasFetchedRef.current = true
-            await fetchPhotos()
-          }
-          setUserLoaded(true)
-          return
+      if (session?.user) {
+        if (!hasFetchedRef.current && photos.length === 0) {
+          hasFetchedRef.current = true;
+          await fetchPhotos(0, 20); // Add offset and limit here
         }
-
-        // If we have a session, use it
-        if (session?.user && !hasFetchedRef.current) {
-          hasFetchedRef.current = true
-          await fetchPhotos()
-        }
-        setUserLoaded(true)
-      } catch (error) {
-        console.error('Error in checkUserAndFetch:', error)
-        if (mounted) setUserLoaded(true)
+        setUserLoaded(true);
+      } else {
+        hasFetchedRef.current = false;
+        reset();
+        setUserLoaded(false);
       }
-    }
+    };
 
-    checkUserAndFetch()
+    // Initial check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthEvent(session);
+    });
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
-      if (!mounted) return
-
-      if (session?.user) {
-        // User is authenticated (signed in or session restored)
-        if (event === 'SIGNED_IN') {
-          // User just signed in, fetch photos
-          hasFetchedRef.current = true
-          fetchPhotos()
-        } else if (event === 'INITIAL_SESSION' && !hasFetchedRef.current) {
-          // Initial session load, fetch photos if not already fetched
-          hasFetchedRef.current = true
-          fetchPhotos()
-        }
-        setUserLoaded(true)
-      } else {
-        // User signed out
-        if (event === 'SIGNED_OUT') {
-          hasFetchedRef.current = false
-          useAlbumStore.getState().reset()
-        }
-        setUserLoaded(false)
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
+        handleAuthEvent(session);
       }
-    })
+    });
 
     return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
-  }, [fetchPhotos, supabase])
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase, photos.length, reset, fetchPhotos]);
 
   const renderActiveView = () => {
     switch (activeView) {
@@ -117,7 +80,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-primary">
+    <div className="min-h-screen bg-baby-powder">
       <main className="container mx-auto px-4 py-8">
         {renderActiveView()}
       </main>

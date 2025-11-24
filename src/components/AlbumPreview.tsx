@@ -162,7 +162,6 @@ export function AlbumPreview() {
           <div className="absolute bottom-4 left-4 right-4 bg-black/50 text-white p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium">{currentPhoto.name}</h3>
                 <p className="text-sm opacity-75">
                   {currentPhotoIndex + 1} of {currentAlbum.photos.length}
                 </p>
@@ -296,7 +295,6 @@ export function AlbumPreview() {
           </div>
           
           <div className="flex-1">
-            <h3 className="font-medium text-gray-900">{photo.name}</h3>
             <p className="text-sm text-gray-600 mt-1">
               Photo {index + 1} of {currentAlbum.photos.length}
             </p>
@@ -340,7 +338,6 @@ export function AlbumPreview() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             
             <div className="absolute bottom-6 left-6 right-6 text-white">
-              <h3 className="text-xl font-semibold mb-2">{photo.name}</h3>
               <p className="text-sm opacity-90">
                 Chapter {index + 1} of {currentAlbum.photos.length}
               </p>
