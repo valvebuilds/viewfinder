@@ -10,7 +10,8 @@ export async function GET(
     const { supabase, applyCookies } = getSupabaseServerClientForAPI(req)
     const { id } = await params
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data, error: authError } = await supabase.auth.getUser()
+    const user = data?.user
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -95,7 +96,8 @@ export async function DELETE(
     const { supabase, applyCookies } = getSupabaseServerClientForAPI(req)
     const { id } = await params
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data, error: authError } = await supabase.auth.getUser()
+    const user = data?.user
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

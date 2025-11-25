@@ -12,7 +12,8 @@ export async function GET(req: NextRequest) {
     const offset = Number(searchParams.get('offset') || '0') // Default offset to 0
 
     // Always try to get user directly for authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data, error: userError } = await supabase.auth.getUser()
+    const user = data?.user
 
     console.log('API /photos - User check:', {
       hasUser: !!user,

@@ -6,7 +6,8 @@ export async function GET(req: NextRequest) {
   try {
     const { supabase, applyCookies } = getSupabaseServerClientForAPI(req)
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data, error: authError } = await supabase.auth.getUser()
+    const user = data?.user
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -52,7 +53,8 @@ export async function POST(req: NextRequest) {
   try {
     const { supabase, applyCookies } = getSupabaseServerClientForAPI(req)
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data, error: authError } = await supabase.auth.getUser()
+    const user = data?.user
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -6,7 +6,8 @@ export async function POST(req: NextRequest) {
     // Create server client with request cookies
     const { supabase, applyCookies } = getSupabaseServerClientForAPI(req)
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data, error: authError } = await supabase.auth.getUser()
+    const user = data?.user
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

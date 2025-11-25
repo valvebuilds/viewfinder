@@ -10,7 +10,8 @@ export async function POST(req: NextRequest) {
     const { supabase, applyCookies } = getSupabaseServerClientForAPI(req)
     
     // Always use getUser() to authenticate - never trust session.user directly
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data, error: authError } = await supabase.auth.getUser()
+    const user = data?.user
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

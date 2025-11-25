@@ -35,9 +35,8 @@ export async function middleware(req: NextRequest) {
     }
   )
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const { data } = await supabase.auth.getSession()
+  const session = data?.session
 
   const isPublicRoute = publicRoutes.some(route => 
     req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route)

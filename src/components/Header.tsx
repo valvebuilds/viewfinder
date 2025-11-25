@@ -5,6 +5,7 @@ import { Camera, Sparkles, Share2, Eye, LogOut, User } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
@@ -17,12 +18,12 @@ export function Header() {
   const supabase = getSupabaseBrowserClient()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }: { data: { user: SupabaseUser | null } }) => {
       setUser(user)
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       setUser(session?.user ?? null)
     })
 
