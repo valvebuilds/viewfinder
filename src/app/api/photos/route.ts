@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
     const offset = Number(searchParams.get('offset') || '0') // Default offset to 0
 
     // Always try to get user directly for authentication
-    const { data, error: userError } = await supabase.auth.getUser()
-    const user = data?.user
+    const { data: authData, error: userError } = await supabase.auth.getUser()
+    const user = authData?.user
 
     console.log('API /photos - User check:', {
       hasUser: !!user,
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     console.log('Fetching photos for user:', user.id)
     
-    const { data, error, count } = await supabase
+    const { data: photosData, error, count } = await supabase
       .from('photos')
       .select('id, path, thumbnail_path, mime, created_at, user_id, data', { count: 'exact' })
       .eq('user_id', user.id)
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
       }, { status: 500 })
     }
 
-    const filteredData = data || []
+    const filteredData = photosData || []
     
     console.log(`Found ${filteredData.length} photos for user ${user.id} (offset: ${offset}, limit: ${limit})`)
 

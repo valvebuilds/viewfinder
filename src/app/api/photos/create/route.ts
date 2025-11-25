@@ -6,8 +6,8 @@ export async function POST(req: NextRequest) {
     // Create server client with request cookies
     const { supabase, applyCookies } = getSupabaseServerClientForAPI(req)
     
-    const { data, error: authError } = await supabase.auth.getUser()
-    const user = data?.user
+    const { data: authData, error: authError } = await supabase.auth.getUser()
+    const user = authData?.user
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -21,11 +21,11 @@ export async function POST(req: NextRequest) {
     // Note: user_id must be UUID type in the photos table, not bigint
     console.log('Creating/Updating photo record:', { id, fullSignedUrl, mime, userId: user.id, thumbnailSignedUrl })
     
-    let data, error;
+        let mutationResult, error;
 
     if (id) {
       // Update existing photo
-      ({ data, error } = await supabase
+        ({ data: mutationResult, error } = await supabase
         .from('photos')
         .update({
           path: fullSignedUrl,
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         .single());
     } else {
       // Insert new photo
-      ({ data, error } = await supabase
+        ({ data: mutationResult, error } = await supabase
         .from('photos')
         .insert({
           path: fullSignedUrl,
@@ -67,13 +67,13 @@ export async function POST(req: NextRequest) {
       }, { status: 500 })
     }
 
-    if (!data) {
+    if (!mutationResult) {
       console.error('No data returned from operation')
       return NextResponse.json({ error: 'Failed to create/update photo record - no data returned' }, { status: 500 })
     }
 
-    console.log('Photo record created/updated successfully:', data)
-    const response = NextResponse.json({ id: data.id })
+    console.log('Photo record created/updated successfully:', mutationResult)
+    const response = NextResponse.json({ id: mutationResult.id })
     return applyCookies(response)
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed to create photo' }, { status: 500 })
